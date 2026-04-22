@@ -10,12 +10,13 @@ import {
   endOfWeek,
   addDays,
 } from "date-fns";
-import { ChevronLeft, ChevronRight, Flame } from "lucide-react";
+import { ChevronLeft, ChevronRight, Flame, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { dateKey, isInTracker, startDate, endDate, workoutForDate } from "@/lib/dates";
-import { loadJSON } from "@/lib/storage";
-import { computeDayStats, DayState, emptyDayState } from "@/lib/dayProgress";
+import { loadJSON, saveJSON } from "@/lib/storage";
+import { computeDayStats, DayState, emptyDayState, hydrateDayState } from "@/lib/dayProgress";
 import DayDrawer from "@/components/DayDrawer";
 
 function monthMatrix(month: Date): Date[][] {
@@ -40,18 +41,35 @@ export default function CalendarPage() {
 
   const matrix = useMemo(() => monthMatrix(month), [month]);
 
-  // Load percent map for visible days (re-renders when drawer closes via key bump below)
+  // Load percent + dayName map for visible days
   const [bump, setBump] = useState(0);
-  const dayPercents = useMemo(() => {
-    const out: Record<string, number> = {};
+  const dayInfo = useMemo(() => {
+    const out: Record<string, { percent: number; dayName: string }> = {};
     matrix.flat().forEach((d) => {
       if (!isInTracker(d)) return;
-      const s = loadJSON<DayState>(`day:${dateKey(d)}`, emptyDayState);
-      out[dateKey(d)] = computeDayStats(s).percent;
+      const k = dateKey(d);
+      const s = loadJSON<DayState>(`day:${k}`, emptyDayState);
+      out[k] = {
+        percent: computeDayStats(s).percent,
+        dayName: s.dayName ?? workoutForDate(d),
+      };
     });
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matrix, bump]);
+
+  // Inline edit state for a day's name
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState("");
+
+  const commitDayName = (d: Date, name: string) => {
+    const k = dateKey(d);
+    const existing = loadJSON<DayState>(`day:${k}`, emptyDayState);
+    const hydrated = hydrateDayState(existing, workoutForDate(d));
+    saveJSON(`day:${k}`, { ...hydrated, dayName: name });
+    setEditingKey(null);
+    setBump((b) => b + 1);
+  };
 
   const canPrev = month > startOfMonth(startDate);
   const canNext = month < startOfMonth(endDate);
