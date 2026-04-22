@@ -181,10 +181,10 @@ export default function CalendarPage() {
                         value={editDraft}
                         onClick={(e) => e.stopPropagation()}
                         onChange={(e) => setEditDraft(e.target.value)}
-                        onBlur={() => commitDayName(d, editDraft.trim() || workoutForDate(d))}
+                        onBlur={() => commitDayName(d, editDraft.trim())}
                         onKeyDown={(e) => {
                           e.stopPropagation();
-                          if (e.key === "Enter") commitDayName(d, editDraft.trim() || workoutForDate(d));
+                          if (e.key === "Enter") commitDayName(d, editDraft.trim());
                           if (e.key === "Escape") setEditingKey(null);
                         }}
                         className="h-6 text-[11px] px-1.5"
@@ -198,11 +198,24 @@ export default function CalendarPage() {
                           setEditDraft(dayName);
                           setEditingKey(k);
                         }}
-                        className="group/name flex w-full items-center gap-1 rounded px-1 py-0.5 text-left text-[11px] font-medium text-foreground/80 hover:bg-muted/70"
+                        className="group/name flex w-full flex-col items-start gap-0.5 rounded px-1 py-0.5 text-left hover:bg-muted/70"
                         title="Rename this day"
                       >
-                        <span className="truncate flex-1">{dayName}</span>
-                        <Pencil className="h-3 w-3 opacity-0 group-hover/name:opacity-60 shrink-0" />
+                        <span className="flex w-full items-center gap-1">
+                          <span className="truncate flex-1 text-[11px] font-medium text-foreground/80">
+                            {dayName || <span className="text-muted-foreground/60 italic">Untitled</span>}
+                          </span>
+                          <Pencil className="h-3 w-3 opacity-0 group-hover/name:opacity-60 shrink-0" />
+                        </span>
+                        <span className={cn(
+                          "text-[10px] tabular-nums font-semibold",
+                          pct >= 0.85 ? "text-accent"
+                            : pct >= 0.5 ? "text-primary"
+                            : pct > 0 ? "text-warning"
+                            : "text-muted-foreground/60"
+                        )}>
+                          {Math.round(pct * 100)}%
+                        </span>
                       </button>
                     )}
                   </div>
