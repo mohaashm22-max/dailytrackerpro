@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
-const PREFIX = "dt2026:";
+// Bumped to v2 to clear all prior placeholder data and start with a blank template.
+const PREFIX = "dt2026v2:";
 
 export function loadJSON<T>(key: string, fallback: T): T {
   try {
