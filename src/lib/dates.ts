@@ -1,8 +1,9 @@
-import { TRACKER_START, TRACKER_END, WORKOUT_ROTATION } from "@/data/template";
+import { TRACKER_START, TRACKER_END, WORKOUT_ROTATION, WORKOUT_ROTATION_ANCHOR } from "@/data/template";
 import { differenceInCalendarDays, parseISO, format } from "date-fns";
 
 export const startDate = parseISO(TRACKER_START);
 export const endDate = parseISO(TRACKER_END);
+const workoutAnchor = parseISO(WORKOUT_ROTATION_ANCHOR);
 
 /** YYYY-MM-DD key from a Date (local). */
 export function dateKey(d: Date): string {
@@ -20,9 +21,10 @@ export function isInTracker(d: Date): boolean {
 }
 
 export function workoutForDate(d: Date): string {
-  const i = dayIndex(d);
-  if (i < 0) return WORKOUT_ROTATION[0];
-  return WORKOUT_ROTATION[i % WORKOUT_ROTATION.length];
+  const i = differenceInCalendarDays(d, workoutAnchor);
+  const len = WORKOUT_ROTATION.length;
+  const idx = ((i % len) + len) % len;
+  return WORKOUT_ROTATION[idx];
 }
 
 export function statusFromPercent(pct: number): {
