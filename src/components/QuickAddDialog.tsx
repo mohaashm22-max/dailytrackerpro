@@ -37,7 +37,7 @@ interface Props {
   onSaved?: () => void;
 }
 
-type Mode = "task" | "section";
+type Mode = "task" | "block" | "section";
 type Range = "single" | "range" | "all-year";
 
 function DatePickerField({
@@ -105,6 +105,12 @@ export default function QuickAddDialog({
   const [newSectionTitle, setNewSectionTitle] = useState("");
   const [initialTasksRaw, setInitialTasksRaw] = useState("");
 
+  // Block fields
+  const [blockTitle, setBlockTitle] = useState("");
+  const [blockTasksRaw, setBlockTasksRaw] = useState("");
+  const [blockTarget, setBlockTarget] = useState<"workout" | "section">("section");
+  const [blockSectionTitle, setBlockSectionTitle] = useState("Tasks");
+
   // Reset when reopened
   useEffect(() => {
     if (!open) return;
@@ -118,6 +124,10 @@ export default function QuickAddDialog({
     setSectionTitleForTask("Tasks");
     setNewSectionTitle("");
     setInitialTasksRaw("");
+    setBlockTitle("");
+    setBlockTasksRaw("");
+    setBlockTarget("section");
+    setBlockSectionTitle("Tasks");
   }, [open, initialDate]);
 
   const scope: ScheduleScope | null = useMemo(() => {
@@ -149,6 +159,25 @@ export default function QuickAddDialog({
       toast({
         title: "Task added",
         description: `Applied to ${n} day${n === 1 ? "" : "s"}.`,
+      });
+    } else if (mode === "block") {
+      const title = blockTitle.trim();
+      if (!title) {
+        toast({ title: "Block title is required", variant: "destructive" });
+        return;
+      }
+      const tasks = blockTasksRaw
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const target =
+        blockTarget === "workout"
+          ? ({ kind: "workout" } as const)
+          : ({ kind: "section", title: blockSectionTitle.trim() || "Tasks" } as const);
+      const n = bulkAddBlock(scope, { target, blockTitle: title, tasks });
+      toast({
+        title: "Block added",
+        description: `Created on ${n} day${n === 1 ? "" : "s"}.`,
       });
     } else {
       const title = newSectionTitle.trim();
