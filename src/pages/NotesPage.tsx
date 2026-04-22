@@ -138,14 +138,15 @@ export default function NotesPage() {
         <section className="flex flex-col">
           {active ? (
             <>
-              <div className="px-5 pt-5">
+              <div className="px-5 pt-5" dir="ltr">
                 <Input
                   value={active.title}
                   onChange={(e) => update({ title: e.target.value })}
-                  className="text-xl md:text-2xl font-bold border-0 px-0 focus-visible:ring-0 shadow-none h-auto bg-transparent"
+                  dir="ltr"
+                  className="text-xl md:text-2xl font-bold border-0 px-0 focus-visible:ring-0 shadow-none h-auto bg-transparent text-left"
                   placeholder="Note title"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground mt-1 text-left">
                   Last updated {format(active.updatedAt, "PPp")}
                 </p>
               </div>
@@ -153,7 +154,8 @@ export default function NotesPage() {
                 value={active.body}
                 onChange={(e) => update({ body: e.target.value })}
                 placeholder="Start writing…"
-                className="flex-1 m-5 mt-4 min-h-[40vh] resize-none border-0 bg-muted/30 focus-visible:ring-1 text-base leading-relaxed"
+                dir="ltr"
+                className="flex-1 m-5 mt-4 min-h-[40vh] resize-none border-0 bg-muted/30 focus-visible:ring-1 text-base leading-relaxed text-left"
               />
             </>
           ) : (
