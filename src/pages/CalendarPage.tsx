@@ -181,10 +181,10 @@ export default function CalendarPage() {
                         value={editDraft}
                         onClick={(e) => e.stopPropagation()}
                         onChange={(e) => setEditDraft(e.target.value)}
-                        onBlur={() => commitDayName(d, editDraft.trim() || workoutForDate(d))}
+                        onBlur={() => commitDayName(d, editDraft.trim())}
                         onKeyDown={(e) => {
                           e.stopPropagation();
-                          if (e.key === "Enter") commitDayName(d, editDraft.trim() || workoutForDate(d));
+                          if (e.key === "Enter") commitDayName(d, editDraft.trim());
                           if (e.key === "Escape") setEditingKey(null);
                         }}
                         className="h-6 text-[11px] px-1.5"
