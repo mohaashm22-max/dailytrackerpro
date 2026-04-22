@@ -1,0 +1,183 @@
+import { useMemo, useState } from "react";
+import {
+  addMonths,
+  endOfMonth,
+  format,
+  isSameDay,
+  isSameMonth,
+  startOfMonth,
+  startOfWeek,
+  endOfWeek,
+  addDays,
+} from "date-fns";
+import { ChevronLeft, ChevronRight, Flame } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { dateKey, isInTracker, startDate, endDate, workoutForDate } from "@/lib/dates";
+import { loadJSON } from "@/lib/storage";
+import { computeDayStats, DayState, emptyDayState } from "@/lib/dayProgress";
+import DayDrawer from "@/components/DayDrawer";
+
+function monthMatrix(month: Date): Date[][] {
+  const start = startOfWeek(startOfMonth(month), { weekStartsOn: 0 });
+  const end = endOfWeek(endOfMonth(month), { weekStartsOn: 0 });
+  const days: Date[] = [];
+  let d = start;
+  while (d <= end) {
+    days.push(d);
+    d = addDays(d, 1);
+  }
+  const rows: Date[][] = [];
+  for (let i = 0; i < days.length; i += 7) rows.push(days.slice(i, i + 7));
+  return rows;
+}
+
+export default function CalendarPage() {
+  const today = new Date();
+  const initialMonth = today >= startDate && today <= endDate ? today : startDate;
+  const [month, setMonth] = useState(startOfMonth(initialMonth));
+  const [selected, setSelected] = useState<Date | null>(null);
+
+  const matrix = useMemo(() => monthMatrix(month), [month]);
+
+  // Load percent map for visible days (re-renders when drawer closes via key bump below)
+  const [bump, setBump] = useState(0);
+  const dayPercents = useMemo(() => {
+    const out: Record<string, number> = {};
+    matrix.flat().forEach((d) => {
+      if (!isInTracker(d)) return;
+      const s = loadJSON<DayState>(`day:${dateKey(d)}`, emptyDayState);
+      out[dateKey(d)] = computeDayStats(s).percent;
+    });
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matrix, bump]);
+
+  const canPrev = month > startOfMonth(startDate);
+  const canNext = month < startOfMonth(endDate);
+
+  return (
+    <div className="mx-auto max-w-5xl px-4 py-6 md:py-10">
+      <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Calendar</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Tap any day to open its tasks. Tracker runs {format(startDate, "MMM d")} – {format(endDate, "MMM d, yyyy")}.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            disabled={!canPrev}
+            onClick={() => setMonth((m) => addMonths(m, -1))}
+            aria-label="Previous month"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <div className="min-w-[10rem] text-center text-sm font-semibold">
+            {format(month, "MMMM yyyy")}
+          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            disabled={!canNext}
+            onClick={() => setMonth((m) => addMonths(m, 1))}
+            aria-label="Next month"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="ml-2"
+            onClick={() => {
+              setMonth(startOfMonth(today >= startDate && today <= endDate ? today : startDate));
+              if (isInTracker(today)) setSelected(today);
+            }}
+          >
+            Today
+          </Button>
+        </div>
+      </header>
+
+      <div className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
+        <div className="grid grid-cols-7 border-b border-border bg-muted/40 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+            <div key={d} className="px-2 py-2 text-center">{d}</div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7">
+          {matrix.flat().map((d) => {
+            const inMonth = isSameMonth(d, month);
+            const inTracker = isInTracker(d);
+            const k = dateKey(d);
+            const pct = dayPercents[k] ?? 0;
+            const isToday = isSameDay(d, today);
+            return (
+              <button
+                key={k}
+                onClick={() => inTracker && setSelected(d)}
+                disabled={!inTracker}
+                className={cn(
+                  "group relative aspect-square md:aspect-[1.1/1] border-r border-b border-border p-2 text-left transition-base",
+                  "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  !inMonth && "bg-muted/30",
+                  !inTracker && "cursor-not-allowed opacity-50",
+                  inTracker && "hover:bg-primary-soft/60"
+                )}
+              >
+                <div className="flex items-start justify-between">
+                  <span
+                    className={cn(
+                      "inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-full text-xs font-semibold",
+                      isToday ? "bg-primary text-primary-foreground" : "text-foreground",
+                      !inMonth && "text-muted-foreground"
+                    )}
+                  >
+                    {format(d, "d")}
+                  </span>
+                  {inTracker && pct >= 0.85 && (
+                    <Flame className="h-3.5 w-3.5 text-accent" />
+                  )}
+                </div>
+                {inTracker && (
+                  <div className="mt-auto absolute inset-x-2 bottom-2 space-y-1">
+                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                      <div
+                        className={cn(
+                          "h-full rounded-full transition-all",
+                          pct >= 0.85
+                            ? "bg-accent"
+                            : pct >= 0.5
+                            ? "bg-primary"
+                            : pct > 0
+                            ? "bg-warning"
+                            : "bg-transparent"
+                        )}
+                        style={{ width: `${Math.round(pct * 100)}%` }}
+                      />
+                    </div>
+                    <div className="hidden md:block text-[10px] text-muted-foreground truncate">
+                      {workoutForDate(d).replace(/^[^\w]+/, "")}
+                    </div>
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <DayDrawer
+        date={selected}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelected(null);
+            setBump((b) => b + 1);
+          }
+        }}
+      />
+    </div>
+  );
+}
