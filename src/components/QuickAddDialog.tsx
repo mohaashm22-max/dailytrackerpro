@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { startDate, endDate, isInTracker } from "@/lib/dates";
 import { toast } from "@/hooks/use-toast";
 import {
+  bulkAddBlock,
   bulkAddSection,
   bulkAddTask,
   ScheduleScope,
