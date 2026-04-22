@@ -206,13 +206,14 @@ export default function QuickAddDialog({
         <DialogHeader>
           <DialogTitle>Quick add</DialogTitle>
           <DialogDescription>
-            Add a task or a whole section to one day, a date range, or every day of the year.
+            Add a task, a block (group of tasks), or a whole section to one day, a date range, or every day of the year.
           </DialogDescription>
         </DialogHeader>
 
         <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)} className="mt-2">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="task">Task</TabsTrigger>
+            <TabsTrigger value="block">Block</TabsTrigger>
             <TabsTrigger value="section">Section</TabsTrigger>
           </TabsList>
 
@@ -257,7 +258,58 @@ export default function QuickAddDialog({
             </div>
           </TabsContent>
 
-          {/* Section tab */}
+          {/* Block tab */}
+          <TabsContent value="block" className="space-y-4 pt-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="block-title" className="text-xs">Block title</Label>
+              <Input
+                id="block-title"
+                value={blockTitle}
+                onChange={(e) => setBlockTitle(e.target.value)}
+                placeholder="e.g. Morning routine, Warm-up…"
+                dir={isRTL(blockTitle) ? "rtl" : "ltr"}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="block-tasks" className="text-xs">
+                Tasks (one per line)
+              </Label>
+              <Textarea
+                id="block-tasks"
+                value={blockTasksRaw}
+                onChange={(e) => setBlockTasksRaw(e.target.value)}
+                rows={4}
+                placeholder={"Task 1\nTask 2\nTask 3"}
+                dir={isRTL(blockTasksRaw) ? "rtl" : "ltr"}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Place in</Label>
+              <RadioGroup
+                value={blockTarget}
+                onValueChange={(v) => setBlockTarget(v as "workout" | "section")}
+                className="flex gap-4"
+              >
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <RadioGroupItem value="section" id="b-section" />
+                  Section
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <RadioGroupItem value="workout" id="b-workout" />
+                  Workout block
+                </label>
+              </RadioGroup>
+              {blockTarget === "section" && (
+                <Input
+                  value={blockSectionTitle}
+                  onChange={(e) => setBlockSectionTitle(e.target.value)}
+                  placeholder="Section title (created if missing)"
+                  className="mt-2"
+                  dir={isRTL(blockSectionTitle) ? "rtl" : "ltr"}
+                />
+              )}
+            </div>
+          </TabsContent>
           <TabsContent value="section" className="space-y-4 pt-4">
             <div className="space-y-1.5">
               <Label htmlFor="sec-title" className="text-xs">Section title</Label>
