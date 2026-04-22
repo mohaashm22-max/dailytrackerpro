@@ -35,6 +35,17 @@ export interface ScheduleSectionInput {
   initialTasks?: string[];
 }
 
+export interface ScheduleBlockInput {
+  /** Section to attach the block to. Workout block, or a named section (created if missing). */
+  target:
+    | { kind: "workout" }
+    | { kind: "section"; title: string };
+  /** Block (group) title — shown above its tasks. */
+  blockTitle: string;
+  /** Tasks inside the block. */
+  tasks: string[];
+}
+
 /** Expand a scope into the concrete list of dates within the tracker. */
 export function datesForScope(scope: ScheduleScope): Date[] {
   if (scope.kind === "single") {
