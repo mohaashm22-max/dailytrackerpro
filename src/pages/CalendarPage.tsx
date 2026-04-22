@@ -10,7 +10,7 @@ import {
   endOfWeek,
   addDays,
 } from "date-fns";
-import { ChevronLeft, ChevronRight, Flame, Pencil } from "lucide-react";
+import { ChevronLeft, ChevronRight, Flame, Pencil, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,7 @@ import { dateKey, isInTracker, startDate, endDate, workoutForDate } from "@/lib/
 import { loadJSON, saveJSON } from "@/lib/storage";
 import { computeDayStats, DayState, emptyDayState, hydrateDayState } from "@/lib/dayProgress";
 import DayDrawer from "@/components/DayDrawer";
+import QuickAddDialog from "@/components/QuickAddDialog";
 
 function monthMatrix(month: Date): Date[][] {
   const start = startOfWeek(startOfMonth(month), { weekStartsOn: 0 });
@@ -61,6 +62,10 @@ export default function CalendarPage() {
   // Inline edit state for a day's name
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState("");
+
+  // Quick-add dialog
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [quickAddDate, setQuickAddDate] = useState<Date | null>(null);
 
   const commitDayName = (d: Date, name: string) => {
     const k = dateKey(d);
@@ -254,6 +259,26 @@ export default function CalendarPage() {
             setBump((b) => b + 1);
           }
         }}
+      />
+
+      {/* Floating action button — quick add task / section */}
+      <Button
+        size="icon"
+        onClick={() => {
+          setQuickAddDate(isInTracker(today) ? today : startDate);
+          setQuickAddOpen(true);
+        }}
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-40"
+        aria-label="Quick add task or section"
+      >
+        <Plus className="h-6 w-6" />
+      </Button>
+
+      <QuickAddDialog
+        open={quickAddOpen}
+        onOpenChange={setQuickAddOpen}
+        initialDate={quickAddDate}
+        onSaved={() => setBump((b) => b + 1)}
       />
     </div>
   );
