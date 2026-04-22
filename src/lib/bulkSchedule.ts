@@ -137,5 +137,49 @@ export function bulkAddSection(scope: ScheduleScope, input: ScheduleSectionInput
   return dates.length;
 }
 
+/** Append a new block (group) with its tasks to a day. */
+export function addBlockToDay(date: Date, input: ScheduleBlockInput) {
+  const k = `day:${dateKey(date)}`;
+  const raw = loadJSON<DayState>(k, emptyDayState);
+  const state = hydrateDayState(raw, workoutForDate(date));
+  const newGroup: EditableGroup = {
+    title: input.blockTitle.trim(),
+    tasks: [...input.tasks],
+  };
+
+  if (input.target.kind === "workout") {
+    const groups = (state.workoutGroups ?? []).map((g) => ({
+      title: g.title,
+      tasks: [...g.tasks],
+    }));
+    groups.push(newGroup);
+    saveJSON(k, { ...state, workoutGroups: groups });
+    return;
+  }
+
+  const title = input.target.title.trim();
+  const cats: EditableCategory[] = (state.categories ?? []).map((c) => ({
+    ...c,
+    groups: c.groups.map((g) => ({ title: g.title, tasks: [...g.tasks] })),
+  }));
+  let cat = cats.find((c) => c.title.trim().toLowerCase() === title.toLowerCase());
+  if (!cat) {
+    cat = {
+      id: `cat-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      title,
+      groups: [],
+    };
+    cats.push(cat);
+  }
+  cat.groups.push(newGroup);
+  saveJSON(k, { ...state, categories: cats });
+}
+
+export function bulkAddBlock(scope: ScheduleScope, input: ScheduleBlockInput): number {
+  const dates = datesForScope(scope);
+  for (const d of dates) addBlockToDay(d, input);
+  return dates.length;
+}
+
 /** Re-export for callers building UI. */
 export { WORKOUT_CAT_ID };
