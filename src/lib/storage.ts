@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 
-// Bumped to v2 to clear all prior placeholder data and start with a blank template.
-const PREFIX = "dt2026v2:";
+// v3: switched to hierarchical Block→Section→Task model. Hydration auto-migrates
+// older v2 shapes, but the prefix bump guarantees a clean starting point.
+const PREFIX = "dt2026v3:";
 
 export function loadJSON<T>(key: string, fallback: T): T {
   try {
