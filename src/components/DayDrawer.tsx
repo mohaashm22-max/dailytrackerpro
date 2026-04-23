@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { Plus, Trash2, Pencil, Check, X } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Pencil,
+  Check,
+  X,
+  ChevronDown,
+  Layers,
+  FolderOpen,
+} from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -14,18 +23,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { dateKey, workoutForDate, statusFromPercent } from "@/lib/dates";
 import { useLocalState } from "@/lib/storage";
 import {
   computeDayStats,
   DayState,
-  EditableCategory,
-  EditableGroup,
+  EditableBlock,
+  EditableSection,
   emptyDayState,
   hydrateDayState,
   taskKey,
-  WORKOUT_CAT_ID,
 } from "@/lib/dayProgress";
+import { cn } from "@/lib/utils";
 
 interface Props {
   date: Date | null;
@@ -50,18 +64,18 @@ export default function DayDrawer({ date, onOpenChange }: Props) {
 
 function remapAfterTaskChange(
   state: DayState,
-  catId: string,
-  groupIdx: number,
+  blockId: string,
+  sectionIdx: number,
   transform: (taskIdx: number) => number | null,
 ): Pick<DayState, "checks" | "notes"> {
   const remap = (src: Record<string, any>) => {
     const out: Record<string, any> = {};
     for (const [k, v] of Object.entries(src)) {
-      const [c, gi, ti] = k.split("|");
-      if (c === catId && Number(gi) === groupIdx) {
+      const [b, si, ti] = k.split("|");
+      if (b === blockId && Number(si) === sectionIdx) {
         const newTi = transform(Number(ti));
         if (newTi === null) continue;
-        out[taskKey(c, groupIdx, newTi)] = v;
+        out[taskKey(b, sectionIdx, newTi)] = v;
       } else {
         out[k] = v;
       }
@@ -71,19 +85,19 @@ function remapAfterTaskChange(
   return { checks: remap(state.checks), notes: remap(state.notes) };
 }
 
-function remapAfterGroupChange(
+function remapAfterSectionChange(
   state: DayState,
-  catId: string,
-  transform: (groupIdx: number) => number | null,
+  blockId: string,
+  transform: (sectionIdx: number) => number | null,
 ): Pick<DayState, "checks" | "notes"> {
   const remap = (src: Record<string, any>) => {
     const out: Record<string, any> = {};
     for (const [k, v] of Object.entries(src)) {
-      const [c, gi, ti] = k.split("|");
-      if (c === catId) {
-        const newGi = transform(Number(gi));
-        if (newGi === null) continue;
-        out[taskKey(c, newGi, Number(ti))] = v;
+      const [b, si, ti] = k.split("|");
+      if (b === blockId) {
+        const newSi = transform(Number(si));
+        if (newSi === null) continue;
+        out[taskKey(b, newSi, Number(ti))] = v;
       } else {
         out[k] = v;
       }
@@ -93,19 +107,21 @@ function remapAfterGroupChange(
   return { checks: remap(state.checks), notes: remap(state.notes) };
 }
 
-function stripCategoryKeys(
+function stripBlockKeys(
   state: DayState,
-  catId: string,
+  blockId: string,
 ): Pick<DayState, "checks" | "notes"> {
   const filter = (src: Record<string, any>) => {
     const out: Record<string, any> = {};
     for (const [k, v] of Object.entries(src)) {
-      if (!k.startsWith(catId + "|")) out[k] = v;
+      if (!k.startsWith(blockId + "|")) out[k] = v;
     }
     return out;
   };
   return { checks: filter(state.checks), notes: filter(state.notes) };
 }
+
+const isRTL = (s: string) => /[\u0600-\u06FF]/.test(s);
 
 /* ---------- Day editor ---------- */
 
@@ -119,7 +135,7 @@ function DayEditor({ date }: { date: Date }) {
 
   // Persist hydration once on first open so storage shape is always normalized.
   useEffect(() => {
-    if (!raw.workoutGroups || !raw.categories || raw.dayName === undefined) {
+    if (!raw.blocks || raw.workoutGroups || raw.categories || raw.dayName === undefined) {
       setState(state);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -130,124 +146,141 @@ function DayEditor({ date }: { date: Date }) {
   const setNote = (k: string, v: string) =>
     setState((s) => ({ ...s, notes: { ...s.notes, [k]: v } }));
 
-  /* --- Mutators (workout + categories share a unified shape) --- */
+  /* --- Block / section / task mutators --- */
 
-  const updateGroups = (
-    catId: string,
-    updater: (groups: EditableGroup[]) => EditableGroup[],
-  ) => {
+  const updateBlocks = (updater: (blocks: EditableBlock[]) => EditableBlock[]) => {
     setState((s) => {
       const base = hydrateDayState(s, defaultDayName);
-      if (catId === WORKOUT_CAT_ID) {
-        return { ...base, workoutGroups: updater(base.workoutGroups!) };
-      }
+      return { ...base, blocks: updater(base.blocks!) };
+    });
+  };
+
+  const setDayName = (name: string) =>
+    setState((s) => ({ ...hydrateDayState(s, defaultDayName), dayName: name }));
+
+  // Block mutators
+  const addBlock = () =>
+    updateBlocks((bs) => [
+      ...bs,
+      {
+        id: `block-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        title: "New block",
+        sections: [{ title: "New section", tasks: [] }],
+      },
+    ]);
+
+  const updateBlockTitle = (blockId: string, title: string) =>
+    updateBlocks((bs) => bs.map((b) => (b.id === blockId ? { ...b, title } : b)));
+
+  const deleteBlock = (blockId: string) => {
+    setState((s) => {
+      const base = hydrateDayState(s, defaultDayName);
+      const stripped = stripBlockKeys(base, blockId);
       return {
         ...base,
-        categories: base.categories!.map((c) =>
-          c.id === catId ? { ...c, groups: updater(c.groups) } : c,
+        ...stripped,
+        blocks: base.blocks!.filter((b) => b.id !== blockId),
+      };
+    });
+  };
+
+  // Section mutators
+  const addSection = (blockId: string) =>
+    updateBlocks((bs) =>
+      bs.map((b) =>
+        b.id === blockId
+          ? { ...b, sections: [...b.sections, { title: "New section", tasks: [] }] }
+          : b,
+      ),
+    );
+
+  const updateSectionTitle = (blockId: string, sectionIdx: number, title: string) =>
+    updateBlocks((bs) =>
+      bs.map((b) =>
+        b.id === blockId
+          ? {
+              ...b,
+              sections: b.sections.map((s, i) => (i === sectionIdx ? { ...s, title } : s)),
+            }
+          : b,
+      ),
+    );
+
+  const deleteSection = (blockId: string, sectionIdx: number) => {
+    setState((s) => {
+      const base = hydrateDayState(s, defaultDayName);
+      const remap = remapAfterSectionChange(base, blockId, (si) =>
+        si === sectionIdx ? null : si > sectionIdx ? si - 1 : si,
+      );
+      return {
+        ...base,
+        ...remap,
+        blocks: base.blocks!.map((b) =>
+          b.id === blockId
+            ? { ...b, sections: b.sections.filter((_, i) => i !== sectionIdx) }
+            : b,
         ),
       };
     });
   };
 
-  const addTask = (catId: string, groupIdx: number) =>
-    updateGroups(catId, (gs) =>
-      gs.map((g, i) => (i === groupIdx ? { ...g, tasks: [...g.tasks, "New task"] } : g)),
-    );
-
-  const updateTaskText = (catId: string, groupIdx: number, taskIdx: number, text: string) =>
-    updateGroups(catId, (gs) =>
-      gs.map((g, i) =>
-        i === groupIdx
-          ? { ...g, tasks: g.tasks.map((t, ti) => (ti === taskIdx ? text : t)) }
-          : g,
+  // Task mutators
+  const addTask = (blockId: string, sectionIdx: number) =>
+    updateBlocks((bs) =>
+      bs.map((b) =>
+        b.id === blockId
+          ? {
+              ...b,
+              sections: b.sections.map((s, i) =>
+                i === sectionIdx ? { ...s, tasks: [...s.tasks, "New task"] } : s,
+              ),
+            }
+          : b,
       ),
     );
 
-  const deleteTask = (catId: string, groupIdx: number, taskIdx: number) => {
+  const updateTaskText = (
+    blockId: string,
+    sectionIdx: number,
+    taskIdx: number,
+    text: string,
+  ) =>
+    updateBlocks((bs) =>
+      bs.map((b) =>
+        b.id === blockId
+          ? {
+              ...b,
+              sections: b.sections.map((s, i) =>
+                i === sectionIdx
+                  ? { ...s, tasks: s.tasks.map((t, ti) => (ti === taskIdx ? text : t)) }
+                  : s,
+              ),
+            }
+          : b,
+      ),
+    );
+
+  const deleteTask = (blockId: string, sectionIdx: number, taskIdx: number) => {
     setState((s) => {
       const base = hydrateDayState(s, defaultDayName);
-      const remap = remapAfterTaskChange(base, catId, groupIdx, (ti) =>
+      const remap = remapAfterTaskChange(base, blockId, sectionIdx, (ti) =>
         ti === taskIdx ? null : ti > taskIdx ? ti - 1 : ti,
       );
-      const next: DayState = { ...base, ...remap };
-      if (catId === WORKOUT_CAT_ID) {
-        next.workoutGroups = base.workoutGroups!.map((g, i) =>
-          i === groupIdx ? { ...g, tasks: g.tasks.filter((_, ti) => ti !== taskIdx) } : g,
-        );
-      } else {
-        next.categories = base.categories!.map((c) =>
-          c.id === catId
+      return {
+        ...base,
+        ...remap,
+        blocks: base.blocks!.map((b) =>
+          b.id === blockId
             ? {
-                ...c,
-                groups: c.groups.map((g, i) =>
-                  i === groupIdx
-                    ? { ...g, tasks: g.tasks.filter((_, ti) => ti !== taskIdx) }
-                    : g,
+                ...b,
+                sections: b.sections.map((s, i) =>
+                  i === sectionIdx
+                    ? { ...s, tasks: s.tasks.filter((_, ti) => ti !== taskIdx) }
+                    : s,
                 ),
               }
-            : c,
-        );
-      }
-      return next;
-    });
-  };
-
-  const addGroup = (catId: string) =>
-    updateGroups(catId, (gs) => [...gs, { title: "New group", tasks: [] }]);
-
-  const updateGroupTitle = (catId: string, groupIdx: number, title: string) =>
-    updateGroups(catId, (gs) => gs.map((g, i) => (i === groupIdx ? { ...g, title } : g)));
-
-  const deleteGroup = (catId: string, groupIdx: number) => {
-    setState((s) => {
-      const base = hydrateDayState(s, defaultDayName);
-      const remap = remapAfterGroupChange(base, catId, (gi) =>
-        gi === groupIdx ? null : gi > groupIdx ? gi - 1 : gi,
-      );
-      const next: DayState = { ...base, ...remap };
-      if (catId === WORKOUT_CAT_ID) {
-        next.workoutGroups = base.workoutGroups!.filter((_, i) => i !== groupIdx);
-      } else {
-        next.categories = base.categories!.map((c) =>
-          c.id === catId
-            ? { ...c, groups: c.groups.filter((_, i) => i !== groupIdx) }
-            : c,
-        );
-      }
-      return next;
-    });
-  };
-
-  const updateCategoryTitle = (catId: string, title: string) =>
-    setState((s) => {
-      const base = hydrateDayState(s, defaultDayName);
-      if (catId === WORKOUT_CAT_ID) return { ...base, dayName: title };
-      return {
-        ...base,
-        categories: base.categories!.map((c) => (c.id === catId ? { ...c, title } : c)),
-      };
-    });
-
-  const addCategory = () =>
-    setState((s) => {
-      const base = hydrateDayState(s, defaultDayName);
-      const newCat: EditableCategory = {
-        id: `cat-${Date.now()}`,
-        title: "New section",
-        groups: [{ title: "", tasks: ["New task"] }],
-      };
-      return { ...base, categories: [...base.categories!, newCat] };
-    });
-
-  const deleteCategory = (catId: string) => {
-    setState((s) => {
-      const base = hydrateDayState(s, defaultDayName);
-      const stripped = stripCategoryKeys(base, catId);
-      return {
-        ...base,
-        ...stripped,
-        categories: base.categories!.filter((c) => c.id !== catId),
+            : b,
+        ),
       };
     });
   };
@@ -257,15 +290,16 @@ function DayEditor({ date }: { date: Date }) {
       <SheetHeader className="sticky top-0 z-10 bg-card/95 backdrop-blur border-b border-border px-6 py-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <SheetTitle className="text-lg">
+            <SheetTitle className="text-lg" dir="ltr">
               {format(date, "EEEE, MMMM d, yyyy")}
             </SheetTitle>
             <SheetDescription className="mt-1 flex items-center gap-2">
               <span className="text-xs text-muted-foreground shrink-0">Day name:</span>
               <Input
                 value={state.dayName ?? ""}
-                onChange={(e) => updateCategoryTitle(WORKOUT_CAT_ID, e.target.value)}
+                onChange={(e) => setDayName(e.target.value)}
                 placeholder="Name this day…"
+                dir={isRTL(state.dayName ?? "") ? "rtl" : "ltr"}
                 className="h-7 text-sm font-medium bg-muted/40 border-transparent focus:bg-card focus:border-input"
               />
             </SheetDescription>
@@ -283,63 +317,46 @@ function DayEditor({ date }: { date: Date }) {
         </div>
       </SheetHeader>
 
-      <div className="px-6 py-6 space-y-6">
-        {/* Workout block — uses dayName as title, can't be removed */}
-        <CategoryCard
-          id={WORKOUT_CAT_ID}
-          title={state.dayName || "Workout"}
-          groups={state.workoutGroups!}
-          state={state}
-          removable={false}
-          onTitleChange={(t) => updateCategoryTitle(WORKOUT_CAT_ID, t)}
-          onToggle={toggle}
-          onNote={setNote}
-          onAddTask={addTask}
-          onUpdateTask={updateTaskText}
-          onDeleteTask={deleteTask}
-          onAddGroup={addGroup}
-          onUpdateGroupTitle={updateGroupTitle}
-          onDeleteGroup={deleteGroup}
-        />
+      <div className="px-6 py-6 space-y-4">
+        {state.blocks!.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-6 text-center text-sm text-muted-foreground">
+            No blocks yet. Add a block to start organizing this day.
+          </div>
+        )}
 
-        {state.categories!.map((cat) => (
-          <CategoryCard
-            key={cat.id}
-            id={cat.id}
-            title={cat.title}
-            groups={cat.groups}
+        {state.blocks!.map((block) => (
+          <BlockCard
+            key={block.id}
+            block={block}
             state={state}
-            removable
-            onTitleChange={(t) => updateCategoryTitle(cat.id, t)}
-            onDelete={() => deleteCategory(cat.id)}
+            onTitleChange={(t) => updateBlockTitle(block.id, t)}
+            onDelete={() => deleteBlock(block.id)}
+            onAddSection={() => addSection(block.id)}
+            onUpdateSectionTitle={(si, t) => updateSectionTitle(block.id, si, t)}
+            onDeleteSection={(si) => deleteSection(block.id, si)}
+            onAddTask={(si) => addTask(block.id, si)}
+            onUpdateTask={(si, ti, t) => updateTaskText(block.id, si, ti, t)}
+            onDeleteTask={(si, ti) => deleteTask(block.id, si, ti)}
             onToggle={toggle}
             onNote={setNote}
-            onAddTask={addTask}
-            onUpdateTask={updateTaskText}
-            onDeleteTask={deleteTask}
-            onAddGroup={addGroup}
-            onUpdateGroupTitle={updateGroupTitle}
-            onDeleteGroup={deleteGroup}
           />
         ))}
 
-        <Button
-          variant="outline"
-          className="w-full gap-2"
-          onClick={addCategory}
-        >
-          <Plus className="h-4 w-4" /> Add section
+        <Button variant="outline" className="w-full gap-2" onClick={addBlock}>
+          <Plus className="h-4 w-4" /> Add block
         </Button>
 
         {/* Day note */}
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-soft">
-          <h3 className="font-semibold mb-3">📝 How was your day?</h3>
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-soft" dir="ltr">
+          <h3 className="font-semibold mb-3 text-left">📝 How was your day?</h3>
           <Textarea
             value={state.dayNote ?? ""}
             onChange={(e) =>
               setState((s) => ({ ...hydrateDayState(s, defaultDayName), dayNote: e.target.value }))
             }
             placeholder="Reflections, wins, lessons…"
+            dir="ltr"
+            className="text-left"
             rows={4}
           />
         </div>
@@ -348,248 +365,290 @@ function DayEditor({ date }: { date: Date }) {
   );
 }
 
-/* ---------- Category card ---------- */
+/* ---------- Block card (top level) ---------- */
 
-interface CategoryCardProps {
-  id: string;
-  title: string;
-  groups: EditableGroup[];
+interface BlockCardProps {
+  block: EditableBlock;
   state: DayState;
-  removable: boolean;
   onTitleChange: (title: string) => void;
-  onDelete?: () => void;
+  onDelete: () => void;
+  onAddSection: () => void;
+  onUpdateSectionTitle: (sectionIdx: number, title: string) => void;
+  onDeleteSection: (sectionIdx: number) => void;
+  onAddTask: (sectionIdx: number) => void;
+  onUpdateTask: (sectionIdx: number, taskIdx: number, text: string) => void;
+  onDeleteTask: (sectionIdx: number, taskIdx: number) => void;
   onToggle: (k: string, v: boolean) => void;
   onNote: (k: string, v: string) => void;
-  onAddTask: (catId: string, groupIdx: number) => void;
-  onUpdateTask: (catId: string, groupIdx: number, taskIdx: number, text: string) => void;
-  onDeleteTask: (catId: string, groupIdx: number, taskIdx: number) => void;
-  onAddGroup: (catId: string) => void;
-  onUpdateGroupTitle: (catId: string, groupIdx: number, title: string) => void;
-  onDeleteGroup: (catId: string, groupIdx: number) => void;
 }
 
-function CategoryCard({
-  id,
-  title,
-  groups,
+function BlockCard({
+  block,
   state,
-  removable,
   onTitleChange,
   onDelete,
-  onToggle,
-  onNote,
+  onAddSection,
+  onUpdateSectionTitle,
+  onDeleteSection,
   onAddTask,
   onUpdateTask,
   onDeleteTask,
-  onAddGroup,
-  onUpdateGroupTitle,
-  onDeleteGroup,
-}: CategoryCardProps) {
+  onToggle,
+  onNote,
+}: BlockCardProps) {
+  const [open, setOpen] = useState(true);
   const [editingTitle, setEditingTitle] = useState(false);
-  const [titleDraft, setTitleDraft] = useState(title);
+  const [titleDraft, setTitleDraft] = useState(block.title);
+  useEffect(() => setTitleDraft(block.title), [block.title]);
 
-  useEffect(() => setTitleDraft(title), [title]);
-
-  const total = groups.reduce((n, g) => n + g.tasks.length, 0);
-  const done = groups.reduce(
-    (n, g, gi) => n + g.tasks.filter((_, ti) => state.checks[taskKey(id, gi, ti)]).length,
-    0,
+  const totals = block.sections.reduce(
+    (acc, sec, si) => {
+      const t = sec.tasks.length;
+      const d = sec.tasks.filter((_, ti) => state.checks[taskKey(block.id, si, ti)]).length;
+      return { done: acc.done + d, total: acc.total + t };
+    },
+    { done: 0, total: 0 },
   );
-  const isRTL = /[\u0600-\u06FF]/.test(title);
+  const pct = totals.total ? totals.done / totals.total : 0;
+  const rtl = isRTL(block.title);
 
   return (
-    <section className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
-      <header className="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-border bg-muted/30">
-        {editingTitle ? (
-          <div className="flex items-center gap-1 flex-1 min-w-0">
-            <Input
-              value={titleDraft}
-              onChange={(e) => setTitleDraft(e.target.value)}
-              autoFocus
-              className="h-8 text-sm font-semibold"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
+    <Collapsible
+      open={open}
+      onOpenChange={setOpen}
+      className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden"
+    >
+      <header className="flex items-center justify-between gap-2 px-4 py-3 border-b border-border bg-primary/5">
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="flex items-center gap-2 flex-1 min-w-0 text-left"
+            aria-label={open ? "Collapse block" : "Expand block"}
+          >
+            <ChevronDown
+              className={cn("h-4 w-4 text-muted-foreground transition-transform shrink-0", !open && "-rotate-90")}
+            />
+            <Layers className="h-4 w-4 text-primary shrink-0" />
+            {editingTitle ? (
+              <Input
+                value={titleDraft}
+                onChange={(e) => setTitleDraft(e.target.value)}
+                autoFocus
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => {
+                  e.stopPropagation();
+                  if (e.key === "Enter") {
+                    onTitleChange(titleDraft);
+                    setEditingTitle(false);
+                  }
+                  if (e.key === "Escape") {
+                    setTitleDraft(block.title);
+                    setEditingTitle(false);
+                  }
+                }}
+                onBlur={() => {
                   onTitleChange(titleDraft);
                   setEditingTitle(false);
-                }
-                if (e.key === "Escape") {
-                  setTitleDraft(title);
-                  setEditingTitle(false);
-                }
-              }}
-            />
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-7 w-7 shrink-0"
-              onClick={() => {
-                onTitleChange(titleDraft);
-                setEditingTitle(false);
-              }}
-            >
-              <Check className="h-4 w-4" />
-            </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-7 w-7 shrink-0"
-              onClick={() => {
-                setTitleDraft(title);
-                setEditingTitle(false);
-              }}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        ) : (
-          <h3
-            className="font-semibold text-base flex-1 min-w-0 truncate"
-            dir={isRTL ? "rtl" : "ltr"}
-          >
-            {title || "Untitled section"}
-          </h3>
-        )}
+                }}
+                dir={isRTL(titleDraft) ? "rtl" : "ltr"}
+                className="h-7 text-sm font-bold"
+              />
+            ) : (
+              <h3
+                className="font-bold text-base flex-1 min-w-0 truncate"
+                dir={rtl ? "rtl" : "ltr"}
+              >
+                {block.title || <span className="text-muted-foreground italic">Untitled block</span>}
+              </h3>
+            )}
+          </button>
+        </CollapsibleTrigger>
         <div className="flex items-center gap-1 shrink-0">
-          <span className="text-xs font-medium text-muted-foreground tabular-nums mr-1">
-            {done}/{total}
+          <span className="text-xs font-semibold text-muted-foreground tabular-nums">
+            {totals.done}/{totals.total} · {Math.round(pct * 100)}%
           </span>
           {!editingTitle && (
             <Button
               size="icon"
               variant="ghost"
               className="h-7 w-7"
-              onClick={() => setEditingTitle(true)}
-              aria-label="Rename section"
+              onClick={(e) => {
+                e.stopPropagation();
+                setEditingTitle(true);
+              }}
+              aria-label="Rename block"
             >
               <Pencil className="h-3.5 w-3.5" />
             </Button>
           )}
-          {removable && onDelete && (
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-7 w-7 text-muted-foreground hover:text-destructive"
-              onClick={onDelete}
-              aria-label="Delete section"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
-          )}
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            aria-label="Delete block"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
         </div>
       </header>
-      <div className="divide-y divide-border">
-        {groups.map((g, gi) => (
-          <GroupBlock
-            key={gi}
-            catId={id}
-            groupIdx={gi}
-            group={g}
-            state={state}
-            onToggle={onToggle}
-            onNote={onNote}
-            onAddTask={onAddTask}
-            onUpdateTask={onUpdateTask}
-            onDeleteTask={onDeleteTask}
-            onUpdateGroupTitle={onUpdateGroupTitle}
-            onDeleteGroup={onDeleteGroup}
-          />
-        ))}
-        <div className="px-5 py-3">
+
+      <div className="px-4 pt-1">
+        <Progress value={pct * 100} className="h-1 mt-2" />
+      </div>
+
+      <CollapsibleContent>
+        <div className="p-3 space-y-2">
+          {block.sections.length === 0 && (
+            <p className="text-xs text-muted-foreground italic px-2 py-3 text-center">
+              No sections yet.
+            </p>
+          )}
+          {block.sections.map((section, si) => (
+            <SectionCard
+              key={si}
+              blockId={block.id}
+              sectionIdx={si}
+              section={section}
+              state={state}
+              onTitleChange={(t) => onUpdateSectionTitle(si, t)}
+              onDelete={() => onDeleteSection(si)}
+              onAddTask={() => onAddTask(si)}
+              onUpdateTask={(ti, t) => onUpdateTask(si, ti, t)}
+              onDeleteTask={(ti) => onDeleteTask(si, ti)}
+              onToggle={onToggle}
+              onNote={onNote}
+            />
+          ))}
           <Button
             size="sm"
             variant="ghost"
-            className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-            onClick={() => onAddGroup(id)}
+            className="w-full gap-2 text-xs text-muted-foreground hover:text-foreground"
+            onClick={onAddSection}
           >
-            <Plus className="h-3.5 w-3.5" /> Add group
+            <Plus className="h-3.5 w-3.5" /> Add section
           </Button>
         </div>
-      </div>
-    </section>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 
-/* ---------- Group block ---------- */
+/* ---------- Section card (middle level) ---------- */
 
-function GroupBlock({
-  catId,
-  groupIdx,
-  group,
+interface SectionCardProps {
+  blockId: string;
+  sectionIdx: number;
+  section: EditableSection;
+  state: DayState;
+  onTitleChange: (title: string) => void;
+  onDelete: () => void;
+  onAddTask: () => void;
+  onUpdateTask: (taskIdx: number, text: string) => void;
+  onDeleteTask: (taskIdx: number) => void;
+  onToggle: (k: string, v: boolean) => void;
+  onNote: (k: string, v: string) => void;
+}
+
+function SectionCard({
+  blockId,
+  sectionIdx,
+  section,
   state,
-  onToggle,
-  onNote,
+  onTitleChange,
+  onDelete,
   onAddTask,
   onUpdateTask,
   onDeleteTask,
-  onUpdateGroupTitle,
-  onDeleteGroup,
-}: {
-  catId: string;
-  groupIdx: number;
-  group: EditableGroup;
-  state: DayState;
-  onToggle: (k: string, v: boolean) => void;
-  onNote: (k: string, v: string) => void;
-  onAddTask: (catId: string, groupIdx: number) => void;
-  onUpdateTask: (catId: string, groupIdx: number, taskIdx: number, text: string) => void;
-  onDeleteTask: (catId: string, groupIdx: number, taskIdx: number) => void;
-  onUpdateGroupTitle: (catId: string, groupIdx: number, title: string) => void;
-  onDeleteGroup: (catId: string, groupIdx: number) => void;
-}) {
-  const isRTL = /[\u0600-\u06FF]/.test(group.title);
+  onToggle,
+  onNote,
+}: SectionCardProps) {
+  const [open, setOpen] = useState(true);
+  const total = section.tasks.length;
+  const done = section.tasks.filter((_, ti) => state.checks[taskKey(blockId, sectionIdx, ti)]).length;
+  const pct = total ? done / total : 0;
+  const rtl = isRTL(section.title);
+
   return (
-    <div className="px-5 py-3">
-      <div className="flex items-center gap-1 mb-2">
+    <Collapsible
+      open={open}
+      onOpenChange={setOpen}
+      className="rounded-xl border border-border/70 bg-muted/30 overflow-hidden ml-2"
+    >
+      <header className="flex items-center gap-2 px-3 py-2">
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="flex items-center gap-1.5 shrink-0"
+            aria-label={open ? "Collapse section" : "Expand section"}
+          >
+            <ChevronDown
+              className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", !open && "-rotate-90")}
+            />
+            <FolderOpen className="h-3.5 w-3.5 text-accent" />
+          </button>
+        </CollapsibleTrigger>
         <Input
-          value={group.title}
-          onChange={(e) => onUpdateGroupTitle(catId, groupIdx, e.target.value)}
-          placeholder="Group title (optional)"
-          dir={isRTL ? "rtl" : "ltr"}
-          className="h-7 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground bg-transparent border-transparent hover:border-input focus:border-input px-2"
+          value={section.title}
+          onChange={(e) => onTitleChange(e.target.value)}
+          placeholder="Section title"
+          dir={rtl ? "rtl" : "ltr"}
+          className="h-7 flex-1 text-xs font-semibold uppercase tracking-wider text-foreground/80 bg-transparent border-transparent hover:border-input focus:border-input px-2"
         />
+        <span className="text-[10px] font-semibold text-muted-foreground tabular-nums shrink-0">
+          {done}/{total} · {Math.round(pct * 100)}%
+        </span>
         <Button
           size="icon"
           variant="ghost"
-          className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
-          onClick={() => onDeleteGroup(catId, groupIdx)}
-          aria-label="Delete group"
+          className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
+          onClick={onDelete}
+          aria-label="Delete section"
         >
-          <Trash2 className="h-3.5 w-3.5" />
+          <Trash2 className="h-3 w-3" />
         </Button>
-      </div>
-      <ul className="space-y-2">
-        {group.tasks.map((task, ti) => (
-          <TaskRow
-            key={ti}
-            catId={catId}
-            groupIdx={groupIdx}
-            taskIdx={ti}
-            task={task}
-            state={state}
-            onToggle={onToggle}
-            onNote={onNote}
-            onUpdateTask={onUpdateTask}
-            onDeleteTask={onDeleteTask}
-          />
-        ))}
-      </ul>
-      <Button
-        size="sm"
-        variant="ghost"
-        className="h-7 mt-2 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-        onClick={() => onAddTask(catId, groupIdx)}
-      >
-        <Plus className="h-3.5 w-3.5" /> Add task
-      </Button>
-    </div>
+      </header>
+
+      <CollapsibleContent>
+        <div className="px-3 pb-3 ml-4">
+          <ul className="space-y-2">
+            {section.tasks.map((task, ti) => (
+              <TaskRow
+                key={ti}
+                blockId={blockId}
+                sectionIdx={sectionIdx}
+                taskIdx={ti}
+                task={task}
+                state={state}
+                onToggle={onToggle}
+                onNote={onNote}
+                onUpdateTask={(t) => onUpdateTask(ti, t)}
+                onDeleteTask={() => onDeleteTask(ti)}
+              />
+            ))}
+          </ul>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 mt-2 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+            onClick={onAddTask}
+          >
+            <Plus className="h-3.5 w-3.5" /> Add task
+          </Button>
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 
-/* ---------- Task row ---------- */
+/* ---------- Task row (leaf) ---------- */
 
 function TaskRow({
-  catId,
-  groupIdx,
+  blockId,
+  sectionIdx,
   taskIdx,
   task,
   state,
@@ -598,19 +657,19 @@ function TaskRow({
   onUpdateTask,
   onDeleteTask,
 }: {
-  catId: string;
-  groupIdx: number;
+  blockId: string;
+  sectionIdx: number;
   taskIdx: number;
   task: string;
   state: DayState;
   onToggle: (k: string, v: boolean) => void;
   onNote: (k: string, v: string) => void;
-  onUpdateTask: (catId: string, groupIdx: number, taskIdx: number, text: string) => void;
-  onDeleteTask: (catId: string, groupIdx: number, taskIdx: number) => void;
+  onUpdateTask: (text: string) => void;
+  onDeleteTask: () => void;
 }) {
-  const k = taskKey(catId, groupIdx, taskIdx);
+  const k = taskKey(blockId, sectionIdx, taskIdx);
   const checked = !!state.checks[k];
-  const taskRTL = /[\u0600-\u06FF]/.test(task);
+  const taskRTL = isRTL(task);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(task);
 
@@ -619,7 +678,7 @@ function TaskRow({
   return (
     <li className="group">
       <div
-        className="flex items-start gap-2 rounded-lg p-1.5 -mx-1.5 hover:bg-muted/40 transition-base"
+        className="flex items-start gap-2 rounded-lg p-1.5 -mx-1.5 hover:bg-card transition-base"
         dir={taskRTL ? "rtl" : "ltr"}
       >
         <Checkbox
@@ -632,14 +691,14 @@ function TaskRow({
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             autoFocus
-            dir={/[\u0600-\u06FF]/.test(draft) ? "rtl" : "ltr"}
+            dir={isRTL(draft) ? "rtl" : "ltr"}
             onBlur={() => {
-              onUpdateTask(catId, groupIdx, taskIdx, draft);
+              onUpdateTask(draft);
               setEditing(false);
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                onUpdateTask(catId, groupIdx, taskIdx, draft);
+                onUpdateTask(draft);
                 setEditing(false);
               }
               if (e.key === "Escape") {
@@ -655,9 +714,7 @@ function TaskRow({
             onClick={() => setEditing(true)}
             className={
               "flex-1 text-left text-sm cursor-text " +
-              (checked
-                ? "text-muted-foreground line-through"
-                : "text-foreground")
+              (checked ? "text-muted-foreground line-through" : "text-foreground")
             }
           >
             {task || <span className="text-muted-foreground italic">Empty task</span>}
@@ -667,7 +724,7 @@ function TaskRow({
           size="icon"
           variant="ghost"
           className="h-7 w-7 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-destructive"
-          onClick={() => onDeleteTask(catId, groupIdx, taskIdx)}
+          onClick={onDeleteTask}
           aria-label="Delete task"
         >
           <Trash2 className="h-3.5 w-3.5" />
@@ -677,7 +734,7 @@ function TaskRow({
         value={state.notes[k] ?? ""}
         onChange={(e) => onNote(k, e.target.value)}
         placeholder="Note…"
-        className="mt-1 ml-7 h-8 text-xs bg-muted/30 border-transparent focus:bg-card focus:border-input"
+        className="mt-1 ml-7 h-8 text-xs bg-card border-transparent focus:bg-card focus:border-input"
         dir={taskRTL ? "rtl" : "ltr"}
       />
     </li>
