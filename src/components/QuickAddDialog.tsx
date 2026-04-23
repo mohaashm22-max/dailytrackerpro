@@ -31,13 +31,11 @@ import {
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Optional date pre-selection (e.g. opened from a calendar cell). */
   initialDate?: Date | null;
-  /** Called after a successful save so the parent can refresh. */
   onSaved?: () => void;
 }
 
-type Mode = "task" | "block" | "section";
+type Mode = "task" | "section" | "block";
 type Range = "single" | "range" | "all-year";
 
 function DatePickerField({
@@ -84,6 +82,8 @@ function DatePickerField({
   );
 }
 
+const isRTL = (s: string) => /[\u0600-\u06FF]/.test(s);
+
 export default function QuickAddDialog({
   open,
   onOpenChange,
@@ -98,20 +98,18 @@ export default function QuickAddDialog({
 
   // Task fields
   const [taskText, setTaskText] = useState("");
-  const [taskTarget, setTaskTarget] = useState<"workout" | "section">("section");
-  const [sectionTitleForTask, setSectionTitleForTask] = useState("Tasks");
+  const [taskBlock, setTaskBlock] = useState("Tasks");
+  const [taskSection, setTaskSection] = useState("");
 
   // Section fields
-  const [newSectionTitle, setNewSectionTitle] = useState("");
-  const [initialTasksRaw, setInitialTasksRaw] = useState("");
+  const [sectionBlock, setSectionBlock] = useState("Tasks");
+  const [sectionTitle, setSectionTitle] = useState("");
+  const [sectionInitialTasksRaw, setSectionInitialTasksRaw] = useState("");
 
   // Block fields
   const [blockTitle, setBlockTitle] = useState("");
-  const [blockTasksRaw, setBlockTasksRaw] = useState("");
-  const [blockTarget, setBlockTarget] = useState<"workout" | "section">("section");
-  const [blockSectionTitle, setBlockSectionTitle] = useState("Tasks");
+  const [blockSectionsRaw, setBlockSectionsRaw] = useState("");
 
-  // Reset when reopened
   useEffect(() => {
     if (!open) return;
     setSingle(initialDate ?? undefined);
@@ -120,14 +118,13 @@ export default function QuickAddDialog({
     setRange("single");
     setMode("task");
     setTaskText("");
-    setTaskTarget("section");
-    setSectionTitleForTask("Tasks");
-    setNewSectionTitle("");
-    setInitialTasksRaw("");
+    setTaskBlock("Tasks");
+    setTaskSection("");
+    setSectionBlock("Tasks");
+    setSectionTitle("");
+    setSectionInitialTasksRaw("");
     setBlockTitle("");
-    setBlockTasksRaw("");
-    setBlockTarget("section");
-    setBlockSectionTitle("Tasks");
+    setBlockSectionsRaw("");
   }, [open, initialDate]);
 
   const scope: ScheduleScope | null = useMemo(() => {
@@ -136,8 +133,6 @@ export default function QuickAddDialog({
     if (start && end && start <= end) return { kind: "range", start, end };
     return null;
   }, [range, single, start, end]);
-
-  const isRTL = (s: string) => /[\u0600-\u06FF]/.test(s);
 
   const handleSave = () => {
     if (!scope) {
@@ -151,48 +146,58 @@ export default function QuickAddDialog({
         toast({ title: "Task text is required", variant: "destructive" });
         return;
       }
-      const target =
-        taskTarget === "workout"
-          ? ({ kind: "workout" } as const)
-          : ({ kind: "section", title: sectionTitleForTask.trim() || "Tasks" } as const);
+      const block = taskBlock.trim() || "Tasks";
+      const section = taskSection.trim();
+      const target = section
+        ? ({ kind: "section", blockTitle: block, title: section } as const)
+        : ({ kind: "block", title: block } as const);
       const n = bulkAddTask(scope, { text, target });
       toast({
         title: "Task added",
         description: `Applied to ${n} day${n === 1 ? "" : "s"}.`,
       });
-    } else if (mode === "block") {
+    } else if (mode === "section") {
+      const title = sectionTitle.trim();
+      if (!title) {
+        toast({ title: "Section title is required", variant: "destructive" });
+        return;
+      }
+      const initialTasks = sectionInitialTasksRaw
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const n = bulkAddSection(scope, {
+        blockTitle: sectionBlock.trim() || "Tasks",
+        title,
+        initialTasks,
+      });
+      toast({
+        title: "Section added",
+        description: `Applied to ${n} day${n === 1 ? "" : "s"}.`,
+      });
+    } else {
       const title = blockTitle.trim();
       if (!title) {
         toast({ title: "Block title is required", variant: "destructive" });
         return;
       }
-      const tasks = blockTasksRaw
+      // Each line: "Section title: task1, task2, task3" — task list optional.
+      const sections = blockSectionsRaw
         .split("\n")
-        .map((s) => s.trim())
-        .filter(Boolean);
-      const target =
-        blockTarget === "workout"
-          ? ({ kind: "workout" } as const)
-          : ({ kind: "section", title: blockSectionTitle.trim() || "Tasks" } as const);
-      const n = bulkAddBlock(scope, { target, blockTitle: title, tasks });
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => {
+          const [secTitle, ...rest] = line.split(":");
+          const tasksPart = rest.join(":");
+          const tasks = tasksPart
+            ? tasksPart.split(",").map((t) => t.trim()).filter(Boolean)
+            : [];
+          return { title: secTitle.trim(), tasks };
+        });
+      const n = bulkAddBlock(scope, { title, sections });
       toast({
-        title: "Block added",
-        description: `Created on ${n} day${n === 1 ? "" : "s"}.`,
-      });
-    } else {
-      const title = newSectionTitle.trim();
-      if (!title) {
-        toast({ title: "Section title is required", variant: "destructive" });
-        return;
-      }
-      const initialTasks = initialTasksRaw
-        .split("\n")
-        .map((s) => s.trim())
-        .filter(Boolean);
-      const n = bulkAddSection(scope, { title, initialTasks });
-      toast({
-        title: "Section added",
-        description: `Created on ${n} day${n === 1 ? "" : "s"}.`,
+        title: "Block created",
+        description: `Applied to ${n} day${n === 1 ? "" : "s"}.`,
       });
     }
 
@@ -206,15 +211,15 @@ export default function QuickAddDialog({
         <DialogHeader>
           <DialogTitle>Quick add</DialogTitle>
           <DialogDescription>
-            Add a task, a block (group of tasks), or a whole section to one day, a date range, or every day of the year.
+            Add a task, a whole section, or an entire block to one day, a date range, or every day of the year.
           </DialogDescription>
         </DialogHeader>
 
         <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)} className="mt-2">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="task">Task</TabsTrigger>
-            <TabsTrigger value="block">Block</TabsTrigger>
             <TabsTrigger value="section">Section</TabsTrigger>
+            <TabsTrigger value="block">Block</TabsTrigger>
           </TabsList>
 
           {/* Task tab */}
@@ -229,32 +234,65 @@ export default function QuickAddDialog({
                 dir={isRTL(taskText) ? "rtl" : "ltr"}
               />
             </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs">Place in</Label>
-              <RadioGroup
-                value={taskTarget}
-                onValueChange={(v) => setTaskTarget(v as "workout" | "section")}
-                className="flex gap-4"
-              >
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <RadioGroupItem value="section" id="t-section" />
-                  Section
-                </label>
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <RadioGroupItem value="workout" id="t-workout" />
-                  Workout block
-                </label>
-              </RadioGroup>
-              {taskTarget === "section" && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Block</Label>
                 <Input
-                  value={sectionTitleForTask}
-                  onChange={(e) => setSectionTitleForTask(e.target.value)}
-                  placeholder="Section title (created if missing)"
-                  className="mt-2"
-                  dir={isRTL(sectionTitleForTask) ? "rtl" : "ltr"}
+                  value={taskBlock}
+                  onChange={(e) => setTaskBlock(e.target.value)}
+                  placeholder="Block title"
+                  dir={isRTL(taskBlock) ? "rtl" : "ltr"}
                 />
-              )}
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Section (optional)</Label>
+                <Input
+                  value={taskSection}
+                  onChange={(e) => setTaskSection(e.target.value)}
+                  placeholder="Section title"
+                  dir={isRTL(taskSection) ? "rtl" : "ltr"}
+                />
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Block and section will be created on each selected day if they don't exist yet.
+            </p>
+          </TabsContent>
+
+          {/* Section tab */}
+          <TabsContent value="section" className="space-y-4 pt-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Block</Label>
+                <Input
+                  value={sectionBlock}
+                  onChange={(e) => setSectionBlock(e.target.value)}
+                  placeholder="Parent block"
+                  dir={isRTL(sectionBlock) ? "rtl" : "ltr"}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Section title</Label>
+                <Input
+                  value={sectionTitle}
+                  onChange={(e) => setSectionTitle(e.target.value)}
+                  placeholder="e.g. Warm-up"
+                  dir={isRTL(sectionTitle) ? "rtl" : "ltr"}
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="sec-tasks" className="text-xs">
+                Starter tasks (one per line, optional)
+              </Label>
+              <Textarea
+                id="sec-tasks"
+                value={sectionInitialTasksRaw}
+                onChange={(e) => setSectionInitialTasksRaw(e.target.value)}
+                rows={4}
+                placeholder={"Task 1\nTask 2\nTask 3"}
+                dir={isRTL(sectionInitialTasksRaw) ? "rtl" : "ltr"}
+              />
             </div>
           </TabsContent>
 
@@ -266,72 +304,21 @@ export default function QuickAddDialog({
                 id="block-title"
                 value={blockTitle}
                 onChange={(e) => setBlockTitle(e.target.value)}
-                placeholder="e.g. Morning routine, Warm-up…"
+                placeholder="e.g. Health, Workout, Study…"
                 dir={isRTL(blockTitle) ? "rtl" : "ltr"}
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="block-tasks" className="text-xs">
-                Tasks (one per line)
+              <Label htmlFor="block-sections" className="text-xs">
+                Sections (one per line — format: <code className="text-[10px]">Section title: task1, task2</code>)
               </Label>
               <Textarea
-                id="block-tasks"
-                value={blockTasksRaw}
-                onChange={(e) => setBlockTasksRaw(e.target.value)}
-                rows={4}
-                placeholder={"Task 1\nTask 2\nTask 3"}
-                dir={isRTL(blockTasksRaw) ? "rtl" : "ltr"}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Place in</Label>
-              <RadioGroup
-                value={blockTarget}
-                onValueChange={(v) => setBlockTarget(v as "workout" | "section")}
-                className="flex gap-4"
-              >
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <RadioGroupItem value="section" id="b-section" />
-                  Section
-                </label>
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <RadioGroupItem value="workout" id="b-workout" />
-                  Workout block
-                </label>
-              </RadioGroup>
-              {blockTarget === "section" && (
-                <Input
-                  value={blockSectionTitle}
-                  onChange={(e) => setBlockSectionTitle(e.target.value)}
-                  placeholder="Section title (created if missing)"
-                  className="mt-2"
-                  dir={isRTL(blockSectionTitle) ? "rtl" : "ltr"}
-                />
-              )}
-            </div>
-          </TabsContent>
-          <TabsContent value="section" className="space-y-4 pt-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="sec-title" className="text-xs">Section title</Label>
-              <Input
-                id="sec-title"
-                value={newSectionTitle}
-                onChange={(e) => setNewSectionTitle(e.target.value)}
-                placeholder="e.g. Health, Study, Habits…"
-                dir={isRTL(newSectionTitle) ? "rtl" : "ltr"}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="sec-tasks" className="text-xs">
-                Starter tasks (one per line, optional)
-              </Label>
-              <Textarea
-                id="sec-tasks"
-                value={initialTasksRaw}
-                onChange={(e) => setInitialTasksRaw(e.target.value)}
-                rows={4}
-                placeholder={"Task 1\nTask 2\nTask 3"}
-                dir={isRTL(initialTasksRaw) ? "rtl" : "ltr"}
+                id="block-sections"
+                value={blockSectionsRaw}
+                onChange={(e) => setBlockSectionsRaw(e.target.value)}
+                rows={5}
+                placeholder={"Warm-up: stretch, mobility\nMain: squats, deadlift\nCooldown"}
+                dir={isRTL(blockSectionsRaw) ? "rtl" : "ltr"}
               />
             </div>
           </TabsContent>
