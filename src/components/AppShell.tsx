@@ -1,6 +1,9 @@
-import { CalendarDays, BarChart3, NotebookPen } from "lucide-react";
+import { CalendarDays, BarChart3, NotebookPen, LogOut } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const NAV = [
   { to: "/", label: "Calendar", icon: CalendarDays, end: true },
@@ -9,6 +12,15 @@ const NAV = [
 ];
 
 export default function AppShell() {
+  const { user, signOut } = useAuth();
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success("Signed out");
+  };
+  const initial = (user?.user_metadata?.display_name || user?.email || "?")
+    .toString()
+    .charAt(0)
+    .toUpperCase();
   return (
     <div className="flex min-h-screen w-full bg-background">
       {/* Desktop sidebar */}
@@ -42,8 +54,27 @@ export default function AppShell() {
             </NavLink>
           ))}
         </nav>
-        <div className="mt-auto rounded-xl bg-muted/60 p-3 text-xs text-muted-foreground">
-          Saved locally on this device.
+        <div className="mt-auto space-y-3">
+          <div className="flex items-center gap-2 rounded-xl bg-muted/60 p-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+              {initial}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-medium text-foreground">
+                {user?.user_metadata?.display_name || user?.email}
+              </p>
+              <p className="truncate text-[10px] text-muted-foreground">{user?.email}</p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start gap-2 text-muted-foreground"
+            onClick={handleSignOut}
+          >
+            <LogOut className="h-4 w-4" />
+            Sign out
+          </Button>
         </div>
       </aside>
 
