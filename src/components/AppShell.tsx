@@ -1,29 +1,32 @@
-import { CalendarDays, BarChart3, NotebookPen, LogOut, Languages } from "lucide-react";
+import { CalendarDays, BarChart3, NotebookPen, LogOut, Settings as SettingsIcon } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import { toast } from "sonner";
 
 export default function AppShell() {
   const { user, signOut } = useAuth();
-  const { t, toggle, lang } = useLanguage();
+  const { t } = useLanguage();
+  const { profile } = useProfile();
 
   const NAV = [
     { to: "/", labelKey: "nav.calendar", icon: CalendarDays, end: true },
     { to: "/analysis", labelKey: "nav.analysis", icon: BarChart3 },
     { to: "/notes", labelKey: "nav.notes", icon: NotebookPen },
+    { to: "/settings", labelKey: "nav.settings", icon: SettingsIcon },
   ];
 
   const handleSignOut = async () => {
     await signOut();
     toast.success(t("common.signOut"));
   };
-  const initial = (user?.user_metadata?.display_name || user?.email || "?")
-    .toString()
-    .charAt(0)
-    .toUpperCase();
+
+  const displayName = profile?.display_name || user?.user_metadata?.display_name || user?.email || "?";
+  const initial = displayName.toString().charAt(0).toUpperCase();
 
   return (
     <div className="flex min-h-screen w-full bg-background">
@@ -59,23 +62,16 @@ export default function AppShell() {
           ))}
         </nav>
         <div className="mt-auto space-y-3">
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full justify-start gap-2"
-            onClick={toggle}
-            aria-label="Toggle language"
-          >
-            <Languages className="h-4 w-4" />
-            {t("lang.toggle")}
-          </Button>
           <div className="flex items-center gap-2 rounded-xl bg-muted/60 p-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-              {initial}
-            </div>
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={profile?.avatar_url ?? undefined} alt={displayName} />
+              <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
+                {initial}
+              </AvatarFallback>
+            </Avatar>
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-medium text-foreground">
-                {user?.user_metadata?.display_name || user?.email}
+                {profile?.display_name || user?.user_metadata?.display_name || user?.email}
               </p>
               <p className="truncate text-[10px] text-muted-foreground">{user?.email}</p>
             </div>
@@ -112,18 +108,19 @@ export default function AppShell() {
                 )
               }
             >
-              <item.icon className="h-5 w-5" />
+              {item.to === "/settings" ? (
+                <Avatar className="h-5 w-5">
+                  <AvatarImage src={profile?.avatar_url ?? undefined} alt={displayName} />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-[10px]">
+                    {initial}
+                  </AvatarFallback>
+                </Avatar>
+              ) : (
+                <item.icon className="h-5 w-5" />
+              )}
               {t(item.labelKey)}
             </NavLink>
           ))}
-          <button
-            onClick={toggle}
-            className="flex flex-1 flex-col items-center gap-1 py-2.5 text-xs font-medium text-muted-foreground"
-            aria-label="Toggle language"
-          >
-            <Languages className="h-5 w-5" />
-            {lang === "en" ? "AR" : "EN"}
-          </button>
         </div>
       </nav>
     </div>
