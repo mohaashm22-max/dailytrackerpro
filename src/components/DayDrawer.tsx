@@ -9,6 +9,7 @@ import {
   ChevronDown,
   Layers,
   FolderOpen,
+  NotebookPen,
 } from "lucide-react";
 import {
   Sheet,
@@ -634,7 +635,6 @@ function SectionCard({
         <Input
           value={section.title}
           onChange={(e) => onTitleChange(e.target.value)}
-          placeholder="Section title"
           dir={rtl ? "rtl" : "ltr"}
           className="h-7 flex-1 text-xs font-semibold uppercase tracking-wider text-foreground/80 bg-transparent border-transparent hover:border-input focus:border-input px-2"
         />
@@ -773,7 +773,6 @@ function TaskRow({
       <Input
         value={state.notes[k] ?? ""}
         onChange={(e) => onNote(k, e.target.value)}
-        placeholder="Note…"
         className="mt-1 ml-7 h-8 text-xs bg-card border-transparent focus:bg-card focus:border-input"
         dir={taskRTL ? "rtl" : "ltr"}
       />
