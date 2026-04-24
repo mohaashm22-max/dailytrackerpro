@@ -1,26 +1,30 @@
-import { CalendarDays, BarChart3, NotebookPen, LogOut } from "lucide-react";
+import { CalendarDays, BarChart3, NotebookPen, LogOut, Languages } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
-
-const NAV = [
-  { to: "/", label: "Calendar", icon: CalendarDays, end: true },
-  { to: "/analysis", label: "Analysis", icon: BarChart3 },
-  { to: "/notes", label: "Notes", icon: NotebookPen },
-];
 
 export default function AppShell() {
   const { user, signOut } = useAuth();
+  const { t, toggle, lang } = useLanguage();
+
+  const NAV = [
+    { to: "/", labelKey: "nav.calendar", icon: CalendarDays, end: true },
+    { to: "/analysis", labelKey: "nav.analysis", icon: BarChart3 },
+    { to: "/notes", labelKey: "nav.notes", icon: NotebookPen },
+  ];
+
   const handleSignOut = async () => {
     await signOut();
-    toast.success("Signed out");
+    toast.success(t("common.signOut"));
   };
   const initial = (user?.user_metadata?.display_name || user?.email || "?")
     .toString()
     .charAt(0)
     .toUpperCase();
+
   return (
     <div className="flex min-h-screen w-full bg-background">
       {/* Desktop sidebar */}
@@ -50,11 +54,21 @@ export default function AppShell() {
               }
             >
               <item.icon className="h-4 w-4" />
-              {item.label}
+              {t(item.labelKey)}
             </NavLink>
           ))}
         </nav>
         <div className="mt-auto space-y-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full justify-start gap-2"
+            onClick={toggle}
+            aria-label="Toggle language"
+          >
+            <Languages className="h-4 w-4" />
+            {t("lang.toggle")}
+          </Button>
           <div className="flex items-center gap-2 rounded-xl bg-muted/60 p-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
               {initial}
@@ -73,7 +87,7 @@ export default function AppShell() {
             onClick={handleSignOut}
           >
             <LogOut className="h-4 w-4" />
-            Sign out
+            {t("common.signOut")}
           </Button>
         </div>
       </aside>
@@ -99,9 +113,17 @@ export default function AppShell() {
               }
             >
               <item.icon className="h-5 w-5" />
-              {item.label}
+              {t(item.labelKey)}
             </NavLink>
           ))}
+          <button
+            onClick={toggle}
+            className="flex flex-1 flex-col items-center gap-1 py-2.5 text-xs font-medium text-muted-foreground"
+            aria-label="Toggle language"
+          >
+            <Languages className="h-5 w-5" />
+            {lang === "en" ? "AR" : "EN"}
+          </button>
         </div>
       </nav>
     </div>
