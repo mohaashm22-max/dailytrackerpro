@@ -230,7 +230,6 @@ export default function QuickAddDialog({
                 id="task-text"
                 value={taskText}
                 onChange={(e) => setTaskText(e.target.value)}
-                placeholder="e.g. Drink 2L of water"
                 dir={isRTL(taskText) ? "rtl" : "ltr"}
               />
             </div>
@@ -240,7 +239,6 @@ export default function QuickAddDialog({
                 <Input
                   value={taskBlock}
                   onChange={(e) => setTaskBlock(e.target.value)}
-                  placeholder="Block title"
                   dir={isRTL(taskBlock) ? "rtl" : "ltr"}
                 />
               </div>
@@ -249,7 +247,6 @@ export default function QuickAddDialog({
                 <Input
                   value={taskSection}
                   onChange={(e) => setTaskSection(e.target.value)}
-                  placeholder="Section title"
                   dir={isRTL(taskSection) ? "rtl" : "ltr"}
                 />
               </div>
@@ -267,7 +264,6 @@ export default function QuickAddDialog({
                 <Input
                   value={sectionBlock}
                   onChange={(e) => setSectionBlock(e.target.value)}
-                  placeholder="Parent block"
                   dir={isRTL(sectionBlock) ? "rtl" : "ltr"}
                 />
               </div>
@@ -276,7 +272,6 @@ export default function QuickAddDialog({
                 <Input
                   value={sectionTitle}
                   onChange={(e) => setSectionTitle(e.target.value)}
-                  placeholder="e.g. Warm-up"
                   dir={isRTL(sectionTitle) ? "rtl" : "ltr"}
                 />
               </div>
@@ -290,7 +285,6 @@ export default function QuickAddDialog({
                 value={sectionInitialTasksRaw}
                 onChange={(e) => setSectionInitialTasksRaw(e.target.value)}
                 rows={4}
-                placeholder={"Task 1\nTask 2\nTask 3"}
                 dir={isRTL(sectionInitialTasksRaw) ? "rtl" : "ltr"}
               />
             </div>
@@ -304,7 +298,6 @@ export default function QuickAddDialog({
                 id="block-title"
                 value={blockTitle}
                 onChange={(e) => setBlockTitle(e.target.value)}
-                placeholder="e.g. Health, Workout, Study…"
                 dir={isRTL(blockTitle) ? "rtl" : "ltr"}
               />
             </div>
@@ -317,7 +310,6 @@ export default function QuickAddDialog({
                 value={blockSectionsRaw}
                 onChange={(e) => setBlockSectionsRaw(e.target.value)}
                 rows={5}
-                placeholder={"Warm-up: stretch, mobility\nMain: squats, deadlift\nCooldown"}
                 dir={isRTL(blockSectionsRaw) ? "rtl" : "ltr"}
               />
             </div>

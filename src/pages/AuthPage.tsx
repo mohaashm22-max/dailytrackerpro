@@ -184,7 +184,6 @@ export default function AuthPage() {
                         className="pl-9"
                         value={forgotEmail}
                         onChange={(e) => setForgotEmail(e.target.value)}
-                        placeholder="you@example.com"
                         required
                       />
                     </div>
@@ -226,7 +225,6 @@ export default function AuthPage() {
                             className="pl-9"
                             value={loginEmail}
                             onChange={(e) => setLoginEmail(e.target.value)}
-                            placeholder="you@example.com"
                             required
                           />
                         </div>
@@ -297,7 +295,6 @@ export default function AuthPage() {
                             className="pl-9"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            placeholder="Your name"
                             maxLength={80}
                           />
                         </div>
@@ -313,7 +310,6 @@ export default function AuthPage() {
                             className="pl-9"
                             value={signupEmail}
                             onChange={(e) => setSignupEmail(e.target.value)}
-                            placeholder="you@example.com"
                             required
                           />
                         </div>

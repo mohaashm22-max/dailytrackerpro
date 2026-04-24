@@ -193,7 +193,6 @@ export default function CalendarPage() {
                           if (e.key === "Escape") setEditingKey(null);
                         }}
                         className="h-6 text-[11px] px-1.5"
-                        placeholder="Day name"
                       />
                     ) : (
                       <button
@@ -203,30 +202,31 @@ export default function CalendarPage() {
                           setEditDraft(dayName);
                           setEditingKey(k);
                         }}
-                        className="group/name flex w-full flex-col items-start gap-0.5 rounded px-1 py-0.5 text-left hover:bg-muted/70"
+                        className="group/name flex w-full flex-col items-start gap-0.5 rounded px-1 py-0.5 text-left hover:bg-muted/70 min-h-[1.25rem]"
                         title="Rename this day"
                       >
                         <span className="flex w-full items-center gap-1">
                           <span className="truncate flex-1 text-[11px] font-medium text-foreground/80">
-                            {dayName || <span className="text-muted-foreground/60 italic">Untitled</span>}
+                            {dayName || "\u00A0"}
                           </span>
                           <Pencil className="h-3 w-3 opacity-0 group-hover/name:opacity-60 shrink-0" />
                         </span>
-                        <span className={cn(
-                          "text-[10px] tabular-nums font-semibold",
-                          pct >= 0.85 ? "text-accent"
-                            : pct >= 0.5 ? "text-primary"
-                            : pct > 0 ? "text-warning"
-                            : "text-muted-foreground/60"
-                        )}>
-                          {Math.round(pct * 100)}%
-                        </span>
+                        {pct > 0 && (
+                          <span className={cn(
+                            "text-[10px] tabular-nums font-semibold",
+                            pct >= 0.85 ? "text-accent"
+                              : pct >= 0.5 ? "text-primary"
+                              : "text-warning"
+                          )}>
+                            {Math.round(pct * 100)}%
+                          </span>
+                        )}
                       </button>
                     )}
                   </div>
                 )}
 
-                {inTracker && (
+                {inTracker && pct > 0 && (
                   <div className="absolute inset-x-2 bottom-2">
                     <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
                       <div
@@ -236,9 +236,7 @@ export default function CalendarPage() {
                             ? "bg-accent"
                             : pct >= 0.5
                             ? "bg-primary"
-                            : pct > 0
-                            ? "bg-warning"
-                            : "bg-transparent"
+                            : "bg-warning"
                         )}
                         style={{ width: `${Math.round(pct * 100)}%` }}
                       />
