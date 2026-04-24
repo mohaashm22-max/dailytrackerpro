@@ -16,6 +16,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetClose,
 } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -298,23 +299,33 @@ function DayEditor({ date }: { date: Date }) {
               <Input
                 value={state.dayName ?? ""}
                 onChange={(e) => setDayName(e.target.value)}
-                placeholder="Name this day…"
                 dir={isRTL(state.dayName ?? "") ? "rtl" : "ltr"}
                 className="h-7 text-sm font-medium bg-muted/40 border-transparent focus:bg-card focus:border-input"
               />
             </SheetDescription>
           </div>
-          <Badge className={status.className} variant="secondary">
-            {status.label}
-          </Badge>
-        </div>
-        <div className="mt-3">
-          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
-            <span>{stats.done} / {stats.total} tasks</span>
-            <span>{Math.round(stats.percent * 100)}%</span>
+          <div className="flex items-center gap-2 shrink-0">
+            {stats.percent > 0 && (
+              <Badge className={status.className} variant="secondary">
+                {status.label}
+              </Badge>
+            )}
+            <SheetClose asChild>
+              <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Close">
+                <X className="h-4 w-4" />
+              </Button>
+            </SheetClose>
           </div>
-          <Progress value={stats.percent * 100} className="h-2" />
         </div>
+        {stats.total > 0 && (
+          <div className="mt-3">
+            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
+              <span>{stats.done} / {stats.total} tasks</span>
+              <span>{Math.round(stats.percent * 100)}%</span>
+            </div>
+            <Progress value={stats.percent * 100} className="h-2" />
+          </div>
+        )}
       </SheetHeader>
 
       <div className="px-6 py-6 space-y-4">
@@ -346,6 +357,9 @@ function DayEditor({ date }: { date: Date }) {
           <Plus className="h-4 w-4" /> Add block
         </Button>
 
+        {/* Linked notes from Notes page */}
+        <LinkedNotesList dateKey={dateKey(date)} />
+
         {/* Day note */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-soft" dir="ltr">
           <h3 className="font-semibold mb-3 text-left">📝 How was your day?</h3>
@@ -354,13 +368,39 @@ function DayEditor({ date }: { date: Date }) {
             onChange={(e) =>
               setState((s) => ({ ...hydrateDayState(s, defaultDayName), dayNote: e.target.value }))
             }
-            placeholder="Reflections, wins, lessons…"
             dir="ltr"
             className="text-left"
             rows={4}
           />
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ---------- Linked notes (from Notes page) ---------- */
+
+function LinkedNotesList({ dateKey }: { dateKey: string }) {
+  const [notes] = useLocalState<Array<{ id: string; title: string; body: string; updatedAt: number; linkedDate?: string | null }>>("notes", []);
+  const linked = notes.filter((n) => n.linkedDate === dateKey);
+  if (linked.length === 0) return null;
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5 shadow-soft">
+      <h3 className="font-semibold mb-3 flex items-center gap-2">
+        <NotebookPen className="h-4 w-4 text-primary" />
+        Linked notes
+      </h3>
+      <ul className="space-y-3">
+        {linked.map((n) => (
+          <li key={n.id} className="rounded-lg border border-border/60 bg-muted/30 p-3">
+            <p className="text-sm font-semibold mb-1">{n.title || "Untitled"}</p>
+            <div
+              className="text-sm text-muted-foreground leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
+              dangerouslySetInnerHTML={{ __html: n.body || "" }}
+            />
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
