@@ -440,6 +440,7 @@ function BlockCard({
   onToggle,
   onNote,
 }: BlockCardProps) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(true);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(block.title);
