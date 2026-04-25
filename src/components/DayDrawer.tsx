@@ -549,7 +549,7 @@ function BlockCard({
         <div className="p-3 space-y-2">
           {block.sections.length === 0 && (
             <p className="text-xs text-muted-foreground italic px-2 py-3 text-center">
-              No sections yet.
+              {t("day.noSections")}
             </p>
           )}
           {block.sections.map((section, si) => (
