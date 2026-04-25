@@ -1,11 +1,10 @@
 import { useMemo, useState } from "react";
 import {
   addDays,
-  format,
+  format as dfFormat,
   parseISO,
   startOfMonth,
   endOfMonth,
-  isSameMonth,
   isWithinInterval,
 } from "date-fns";
 import {
@@ -27,6 +26,7 @@ import { dateKey, startDate, endDate } from "@/lib/dates";
 import { loadJSON } from "@/lib/storage";
 import { computeDayStats, DayState, emptyDayState } from "@/lib/dayProgress";
 import { COMMON_CATEGORIES } from "@/data/template";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface DayRow {
   date: Date;
