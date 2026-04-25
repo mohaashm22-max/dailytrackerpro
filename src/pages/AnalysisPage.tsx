@@ -273,8 +273,8 @@ export default function AnalysisPage() {
                     border: "1px solid hsl(var(--border))",
                     borderRadius: 12,
                   }}
-                  formatter={(v: number) => [`${v}%`, "Completion"]}
-                  labelFormatter={(l) => `Day ${l}`}
+                  formatter={(v: number) => [`${v}%`, t("analysis.completion")]}
+                  labelFormatter={(l) => `${t("analysis.day")} ${l}`}
                 />
                 <Line
                   type="monotone"
