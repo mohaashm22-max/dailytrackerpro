@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import {
   addMonths,
   endOfMonth,
-  format,
   isSameDay,
   isSameMonth,
   startOfMonth,
@@ -19,6 +18,7 @@ import { loadJSON, saveJSON } from "@/lib/storage";
 import { computeDayStats, DayState, emptyDayState, hydrateDayState } from "@/lib/dayProgress";
 import DayDrawer from "@/components/DayDrawer";
 import QuickAddDialog from "@/components/QuickAddDialog";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 function monthMatrix(month: Date): Date[][] {
   const start = startOfWeek(startOfMonth(month), { weekStartsOn: 0 });
