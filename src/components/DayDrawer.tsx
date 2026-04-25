@@ -384,6 +384,7 @@ function DayEditor({ date }: { date: Date }) {
 /* ---------- Linked notes (from Notes page) ---------- */
 
 function LinkedNotesList({ dateKey }: { dateKey: string }) {
+  const { t } = useLanguage();
   const [notes] = useLocalState<Array<{ id: string; title: string; body: string; updatedAt: number; linkedDate?: string | null }>>("notes", []);
   const linked = notes.filter((n) => n.linkedDate === dateKey);
   if (linked.length === 0) return null;
@@ -391,12 +392,12 @@ function LinkedNotesList({ dateKey }: { dateKey: string }) {
     <div className="rounded-2xl border border-border bg-card p-5 shadow-soft">
       <h3 className="font-semibold mb-3 flex items-center gap-2">
         <NotebookPen className="h-4 w-4 text-primary" />
-        Linked notes
+        {t("day.linkedNotes")}
       </h3>
       <ul className="space-y-3">
         {linked.map((n) => (
           <li key={n.id} className="rounded-lg border border-border/60 bg-muted/30 p-3">
-            <p className="text-sm font-semibold mb-1">{n.title || "Untitled"}</p>
+            <p className="text-sm font-semibold mb-1">{n.title || t("common.untitled")}</p>
             <div
               className="text-sm text-muted-foreground leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
               dangerouslySetInnerHTML={{ __html: n.body || "" }}
