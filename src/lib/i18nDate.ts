@@ -3,14 +3,14 @@ import {
   ar, enUS, es, fr, de, it, pt, ru, zhCN, ja, ko, hi, tr, id, ms, vi, th,
   nl, pl, uk, sv, nb, da, fi, he, faIR, ro, cs, sk, hu, el, bg, hr, sr, sl,
   et, lv, lt, ca, gl, eu, af, sq, az, bs, mk, mt, is, cy, mn, ka, hy, kk,
-  uz, kn, ta, te, bn, ur,
+  uz, kn, ta, te, bn,
 } from "date-fns/locale";
 
 const LOCALES: Record<string, Locale> = {
-  en: enUS, ar, es, fr, de, it, pt, ru, zh: zhCN, ja, ko, hi, tr, id, ms,
+  en: enUS, ar, ur: ar, es, fr, de, it, pt, ru, zh: zhCN, ja, ko, hi, tr, id, ms,
   vi, th, nl, pl, uk, sv, no: nb, da, fi, he, fa: faIR, ro, cs, sk, hu, el,
   bg, hr, sr, sl, et, lv, lt, ca, gl, eu, af, sq, az, bs, mk, mt, is, cy,
-  mn, ka, hy, kk, uz, kn, ta, te, bn, ur,
+  mn, ka, hy, kk, uz, kn, ta, te, bn,
 };
 
 export function localeFor(lang: string): Locale {
