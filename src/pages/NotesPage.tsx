@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { format, parseISO } from "date-fns";
+import { parseISO } from "date-fns";
 import { Plus, Trash2, Search, CalendarIcon, Link2Off } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { useLocalState } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import { dateKey, startDate, isInTracker } from "@/lib/dates";
 import RichTextEditor from "@/components/RichTextEditor";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Note {
   id: string;
