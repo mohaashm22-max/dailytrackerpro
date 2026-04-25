@@ -37,8 +37,8 @@ export default function AppShell() {
           <div className="flex items-center gap-2">
             <div className="h-9 w-9 rounded-xl gradient-primary shadow-soft" />
             <div>
-              <p className="text-sm font-semibold tracking-tight">Daily Tracker</p>
-              <p className="text-xs text-muted-foreground">2026</p>
+              <p className="text-sm font-semibold tracking-tight">{t("brand.title")}</p>
+              <p className="text-xs text-muted-foreground">{t("brand.year")}</p>
             </div>
           </div>
         </div>
