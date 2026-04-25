@@ -236,7 +236,7 @@ function DayEditor({ date }: { date: Date }) {
           ? {
               ...b,
               sections: b.sections.map((s, i) =>
-                i === sectionIdx ? { ...s, tasks: [...s.tasks, "New task"] } : s,
+                i === sectionIdx ? { ...s, tasks: [...s.tasks, t("day.newTask")] } : s,
               ),
             }
           : b,
