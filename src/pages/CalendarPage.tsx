@@ -35,6 +35,7 @@ function monthMatrix(month: Date): Date[][] {
 }
 
 export default function CalendarPage() {
+  const { t, format } = useLanguage();
   const today = new Date();
   const initialMonth = today >= startDate && today <= endDate ? today : startDate;
   const [month, setMonth] = useState(startOfMonth(initialMonth));
