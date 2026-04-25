@@ -220,7 +220,7 @@ export default function AnalysisPage() {
                   border: "1px solid hsl(var(--border))",
                   borderRadius: 12,
                 }}
-                formatter={(v: number) => [`${v}%`, "Completion"]}
+                formatter={(v: number) => [`${v}%`, t("analysis.completion")]}
               />
               <Bar dataKey="avgPercent" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
             </BarChart>
