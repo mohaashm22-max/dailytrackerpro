@@ -763,7 +763,7 @@ function TaskRow({
               (checked ? "text-muted-foreground line-through" : "text-foreground")
             }
           >
-            {task || <span className="text-muted-foreground italic">Empty task</span>}
+            {task || <span className="text-muted-foreground italic">{t("day.emptyTask")}</span>}
           </button>
         )}
         <Button
