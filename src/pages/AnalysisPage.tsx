@@ -291,7 +291,7 @@ export default function AnalysisPage() {
 
         <div className="grid md:grid-cols-2 gap-5">
           <div>
-            <h3 className="text-sm font-medium mb-2 text-muted-foreground">By category</h3>
+            <h3 className="text-sm font-medium mb-2 text-muted-foreground">{t("analysis.byCategory")}</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={monthCategoryData} layout="vertical" margin={{ left: 10 }}>
