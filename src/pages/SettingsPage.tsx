@@ -177,8 +177,8 @@ export default function SettingsPage() {
               <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="address">{t("settings.address")}</Label>
-              <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} />
+              <Label htmlFor="country">{t("country.label")}</Label>
+              <CountrySelect id="country" value={country} onChange={setCountry} />
             </div>
           </div>
 
@@ -216,14 +216,10 @@ export default function SettingsPage() {
               <Languages className="h-5 w-5" />
               <div>
                 <p className="text-sm font-medium">{t("settings.language")}</p>
-                <p className="text-xs text-muted-foreground">
-                  {lang === "en" ? "English (LTR)" : "العربية (RTL)"}
-                </p>
+                <p className="text-xs text-muted-foreground">{lang.toUpperCase()}</p>
               </div>
             </div>
-            <Button variant="outline" size="sm" onClick={toggleLang}>
-              {t("lang.toggle")}
-            </Button>
+            <LanguageSelector align="end" />
           </div>
         </CardContent>
       </Card>
