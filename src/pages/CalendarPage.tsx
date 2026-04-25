@@ -271,7 +271,7 @@ export default function CalendarPage() {
           setQuickAddOpen(true);
         }}
         className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-40"
-        aria-label="Quick add task or section"
+        aria-label={t("calendar.quickAdd")}
       >
         <Plus className="h-6 w-6" />
       </Button>
