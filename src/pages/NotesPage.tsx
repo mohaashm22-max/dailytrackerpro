@@ -173,18 +173,18 @@ export default function NotesPage() {
                   className="text-xl md:text-2xl font-bold border-0 px-0 focus-visible:ring-0 shadow-none h-auto bg-transparent text-left"
                 />
                 <p className="text-xs text-muted-foreground mt-1 text-left">
-                  Last updated {format(active.updatedAt, "PPp")}
+                  {t("notes.lastUpdated", { when: format(active.updatedAt, "PPp") })}
                 </p>
               </div>
 
               {/* Date link */}
               <div className="flex flex-wrap items-center gap-2 text-xs">
-                <Label className="text-xs text-muted-foreground">Linked day:</Label>
+                <Label className="text-xs text-muted-foreground">{t("notes.linkedDay")}</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" size="sm" className="h-8 gap-2">
                       <CalendarIcon className="h-3.5 w-3.5" />
-                      {linkedDateObj ? format(linkedDateObj, "PPP") : "Link to a calendar day"}
+                      {linkedDateObj ? format(linkedDateObj, "PPP") : t("notes.linkPick")}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -195,6 +195,7 @@ export default function NotesPage() {
                       defaultMonth={linkedDateObj ?? startDate}
                       disabled={(d) => !isInTracker(d)}
                       initialFocus
+                      locale={locale}
                       className="p-3 pointer-events-auto"
                     />
                   </PopoverContent>
@@ -207,7 +208,7 @@ export default function NotesPage() {
                     onClick={() => update({ linkedDate: null })}
                   >
                     <Link2Off className="h-3.5 w-3.5" />
-                    Unlink
+                    {t("notes.unlink")}
                   </Button>
                 )}
               </div>
@@ -220,7 +221,7 @@ export default function NotesPage() {
             </div>
           ) : (
             <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
-              Select or create a note to begin.
+              {t("notes.selectOrCreate")}
             </div>
           )}
         </section>
