@@ -128,10 +128,10 @@ export default function NotesPage() {
                       >
                         <div className="min-w-0">
                           <p className="text-sm font-medium truncate">
-                            {n.title || "Untitled note"}
+                            {n.title || t("notes.untitled")}
                           </p>
                           <p className="text-xs text-muted-foreground truncate">
-                            {preview || "No content"}
+                            {preview || t("notes.noContent")}
                           </p>
                           <div className="flex items-center gap-2 mt-0.5">
                             <p className="text-[10px] text-muted-foreground">
