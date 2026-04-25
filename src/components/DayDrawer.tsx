@@ -193,7 +193,7 @@ function DayEditor({ date }: { date: Date }) {
     updateBlocks((bs) =>
       bs.map((b) =>
         b.id === blockId
-          ? { ...b, sections: [...b.sections, { title: "New section", tasks: [] }] }
+          ? { ...b, sections: [...b.sections, { title: t("day.newSection"), tasks: [] }] }
           : b,
       ),
     );
