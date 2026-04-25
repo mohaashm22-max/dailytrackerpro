@@ -298,7 +298,7 @@ function DayEditor({ date }: { date: Date }) {
               {format(date, "EEEE, MMMM d, yyyy")}
             </SheetTitle>
             <SheetDescription className="mt-1 flex items-center gap-2">
-              <span className="text-xs text-muted-foreground shrink-0">Day name:</span>
+              <span className="text-xs text-muted-foreground shrink-0">{t("day.dayName")}</span>
               <Input
                 value={state.dayName ?? ""}
                 onChange={(e) => setDayName(e.target.value)}
@@ -310,11 +310,11 @@ function DayEditor({ date }: { date: Date }) {
           <div className="flex items-center gap-2 shrink-0">
             {stats.percent > 0 && (
               <Badge className={status.className} variant="secondary">
-                {status.label}
+                {statusLabel}
               </Badge>
             )}
             <SheetClose asChild>
-              <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Close">
+              <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={t("common.close")}>
                 <X className="h-4 w-4" />
               </Button>
             </SheetClose>
@@ -323,7 +323,7 @@ function DayEditor({ date }: { date: Date }) {
         {stats.total > 0 && (
           <div className="mt-3">
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
-              <span>{stats.done} / {stats.total} tasks</span>
+              <span>{t("day.tasksOf", { done: stats.done, total: stats.total })}</span>
               <span>{Math.round(stats.percent * 100)}%</span>
             </div>
             <Progress value={stats.percent * 100} className="h-2" />
@@ -334,7 +334,7 @@ function DayEditor({ date }: { date: Date }) {
       <div className="px-6 py-6 space-y-4">
         {state.blocks!.length === 0 && (
           <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-6 text-center text-sm text-muted-foreground">
-            No blocks yet. Add a block to start organizing this day.
+            {t("day.noBlocks")}
           </div>
         )}
 
