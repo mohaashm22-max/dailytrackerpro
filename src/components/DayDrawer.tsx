@@ -771,7 +771,7 @@ function TaskRow({
           variant="ghost"
           className="h-7 w-7 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-destructive"
           onClick={onDeleteTask}
-          aria-label="Delete task"
+          aria-label={t("day.deleteTask")}
         >
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
