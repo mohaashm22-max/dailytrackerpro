@@ -712,6 +712,7 @@ function TaskRow({
   onUpdateTask: (text: string) => void;
   onDeleteTask: () => void;
 }) {
+  const { t } = useLanguage();
   const k = taskKey(blockId, sectionIdx, taskIdx);
   const checked = !!state.checks[k];
   const taskRTL = isRTL(task);
