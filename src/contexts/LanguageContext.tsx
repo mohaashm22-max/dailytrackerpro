@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, ReactNode, useCallback } from "react";
+import { LANGUAGES, RTL_CODES } from "@/data/languages";
 
-export type Lang = "en" | "ar";
+export type Lang = string;
 
 type Dict = Record<string, string>;
 
@@ -15,8 +16,15 @@ const EN: Dict = {
   "common.add": "Add",
   "common.save": "Save",
   "common.delete": "Delete",
+  "common.search": "Search",
+  "common.noResults": "No results",
   "lang.toggle": "العربية",
   "lang.label": "Language",
+  "lang.select": "Select language",
+  "lang.searchPlaceholder": "Search language",
+  "country.label": "Country",
+  "country.select": "Select country",
+  "country.searchPlaceholder": "Search country",
   "settings.title": "Settings",
   "settings.subtitle": "Manage your profile, preferences, and account",
   "settings.profile": "Profile",
@@ -56,8 +64,15 @@ const AR: Dict = {
   "common.add": "إضافة",
   "common.save": "حفظ",
   "common.delete": "حذف",
+  "common.search": "بحث",
+  "common.noResults": "لا توجد نتائج",
   "lang.toggle": "English",
   "lang.label": "اللغة",
+  "lang.select": "اختر اللغة",
+  "lang.searchPlaceholder": "ابحث عن لغة",
+  "country.label": "الدولة",
+  "country.select": "اختر الدولة",
+  "country.searchPlaceholder": "ابحث عن دولة",
   "settings.title": "الإعدادات",
   "settings.subtitle": "إدارة ملفك الشخصي والتفضيلات والحساب",
   "settings.profile": "الملف الشخصي",
@@ -86,7 +101,7 @@ const AR: Dict = {
   "settings.weakPassword": "كلمة المرور لا تستوفي جميع المتطلبات",
 };
 
-const DICTS: Record<Lang, Dict> = { en: EN, ar: AR };
+const DICTS: Record<string, Dict> = { en: EN, ar: AR };
 
 interface Ctx {
   lang: Lang;
@@ -94,20 +109,22 @@ interface Ctx {
   toggle: () => void;
   t: (key: string) => string;
   dir: "ltr" | "rtl";
+  available: typeof LANGUAGES;
 }
 
 const LanguageContext = createContext<Ctx | null>(null);
 
 const STORAGE_KEY = "dt2026:lang";
+const VALID_CODES = new Set(LANGUAGES.map((l) => l.code));
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(() => {
     if (typeof window === "undefined") return "en";
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved === "ar" ? "ar" : "en";
+    const saved = localStorage.getItem(STORAGE_KEY) || "";
+    return VALID_CODES.has(saved) ? saved : "en";
   });
 
-  const dir: "ltr" | "rtl" = lang === "ar" ? "rtl" : "ltr";
+  const dir: "ltr" | "rtl" = RTL_CODES.has(lang) ? "rtl" : "ltr";
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -115,11 +132,19 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, lang);
   }, [lang, dir]);
 
-  const setLang = useCallback((l: Lang) => setLangState(l), []);
+  const setLang = useCallback((l: Lang) => {
+    if (VALID_CODES.has(l)) setLangState(l);
+  }, []);
   const toggle = useCallback(() => setLangState((l) => (l === "en" ? "ar" : "en")), []);
-  const t = useCallback((key: string) => DICTS[lang][key] ?? EN[key] ?? key, [lang]);
+  const t = useCallback(
+    (key: string) => DICTS[lang]?.[key] ?? EN[key] ?? key,
+    [lang],
+  );
 
-  const value = useMemo(() => ({ lang, setLang, toggle, t, dir }), [lang, setLang, toggle, t, dir]);
+  const value = useMemo(
+    () => ({ lang, setLang, toggle, t, dir, available: LANGUAGES }),
+    [lang, setLang, toggle, t, dir],
+  );
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
 
