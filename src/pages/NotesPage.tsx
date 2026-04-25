@@ -38,6 +38,7 @@ function stripHtml(html: string): string {
 }
 
 export default function NotesPage() {
+  const { t, format, locale } = useLanguage();
   const [notes, setNotes] = useLocalState<Note[]>("notes", []);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
