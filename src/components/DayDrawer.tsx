@@ -503,7 +503,7 @@ function BlockCard({
                 className="font-bold text-base flex-1 min-w-0 truncate"
                 dir={rtl ? "rtl" : "ltr"}
               >
-                {block.title || <span className="text-muted-foreground italic">Untitled block</span>}
+                {block.title || <span className="text-muted-foreground italic">{t("day.untitledBlock")}</span>}
               </h3>
             )}
           </button>
