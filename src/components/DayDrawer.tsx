@@ -574,7 +574,7 @@ function BlockCard({
             className="w-full gap-2 text-xs text-muted-foreground hover:text-foreground"
             onClick={onAddSection}
           >
-            <Plus className="h-3.5 w-3.5" /> Add section
+            <Plus className="h-3.5 w-3.5" /> {t("day.addSection")}
           </Button>
         </div>
       </CollapsibleContent>
