@@ -82,14 +82,14 @@ export default function NotesPage() {
     <div className="mx-auto max-w-6xl px-4 py-6 md:py-10">
       <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Notes</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{t("notes.title")}</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Free-form thoughts, reminders, and ideas.
+            {t("notes.subtitle")}
           </p>
         </div>
         <Button onClick={create} className="gap-2">
           <Plus className="h-4 w-4" />
-          New note
+          {t("notes.new")}
         </Button>
       </header>
 
