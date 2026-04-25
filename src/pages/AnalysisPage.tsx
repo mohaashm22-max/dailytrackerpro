@@ -246,21 +246,21 @@ export default function AnalysisPage() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard label="Avg completion" value={`${monthAvg}%`} />
+          <StatCard label={t("analysis.avgCompletion")} value={`${monthAvg}%`} />
           <StatCard
-            label="Best day"
+            label={t("analysis.bestDay")}
             value={monthBestDay && monthBestDay.percent > 0 ? `${Math.round(monthBestDay.percent * 100)}%` : "—"}
             sub={monthBestDay && monthBestDay.percent > 0 ? format(monthBestDay.date, "MMM d") : ""}
           />
           <StatCard
-            label="Days ≥ 50%"
+            label={t("analysis.daysAt50")}
             value={`${monthDays.filter((r) => r.percent >= 0.5).length}`}
           />
-          <StatCard label="Tasks done" value={`${monthDays.reduce((n, r) => n + r.done, 0)}`} />
+          <StatCard label={t("analysis.tasksDoneShort")} value={`${monthDays.reduce((n, r) => n + r.done, 0)}`} />
         </div>
 
         <div>
-          <h3 className="text-sm font-medium mb-2 text-muted-foreground">Daily completion</h3>
+          <h3 className="text-sm font-medium mb-2 text-muted-foreground">{t("analysis.dailyCompletion")}</h3>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={monthDailyData}>
