@@ -70,6 +70,7 @@ const COLORS = [
 ];
 
 export default function AnalysisPage() {
+  const { t, format } = useLanguage();
   const allDays = useMemo(buildAllDays, []);
   const today = new Date();
   const defaultMonth = today >= startDate && today <= endDate ? today : startDate;
