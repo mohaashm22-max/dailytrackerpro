@@ -357,7 +357,7 @@ function DayEditor({ date }: { date: Date }) {
         ))}
 
         <Button variant="outline" className="w-full gap-2" onClick={addBlock}>
-          <Plus className="h-4 w-4" /> Add block
+          <Plus className="h-4 w-4" /> {t("day.addBlock")}
         </Button>
 
         {/* Linked notes from Notes page */}
