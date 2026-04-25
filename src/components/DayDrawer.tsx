@@ -651,7 +651,7 @@ function SectionCard({
           variant="ghost"
           className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
           onClick={onDelete}
-          aria-label="Delete section"
+          aria-label={t("day.deleteSection")}
         >
           <Trash2 className="h-3 w-3" />
         </Button>
