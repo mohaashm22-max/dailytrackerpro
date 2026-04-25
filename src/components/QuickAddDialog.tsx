@@ -42,13 +42,15 @@ function DatePickerField({
   value,
   onChange,
   label,
-  placeholder = "Pick a date",
+  placeholder,
 }: {
   value: Date | undefined;
   onChange: (d: Date | undefined) => void;
   label: string;
   placeholder?: string;
 }) {
+  const { format, t, locale } = useLanguage();
+  const ph = placeholder ?? t("qa.date");
   return (
     <div className="space-y-1.5">
       <Label className="text-xs">{label}</Label>
