@@ -168,8 +168,8 @@ function DayEditor({ date }: { date: Date }) {
       ...bs,
       {
         id: `block-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-        title: "New block",
-        sections: [{ title: "New section", tasks: [] }],
+        title: t("day.newBlock"),
+        sections: [{ title: t("day.newSection"), tasks: [] }],
       },
     ]);
 
