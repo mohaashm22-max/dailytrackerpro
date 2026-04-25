@@ -17,6 +17,8 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { PASSWORD_CHECKS, isPasswordStrong } from "@/lib/passwordPolicy";
+import { CountrySelect } from "@/components/CountrySelect";
+import { LanguageSelector } from "@/components/LanguageSelector";
 import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
@@ -24,10 +26,10 @@ export default function SettingsPage() {
   const { user, signOut } = useAuth();
   const { profile, update, refresh } = useProfile();
   const { theme, toggle: toggleTheme } = useTheme();
-  const { lang, toggle: toggleLang, t } = useLanguage();
+  const { lang, t } = useLanguage();
 
   const [name, setName] = useState("");
-  const [address, setAddress] = useState("");
+  const [country, setCountry] = useState<string | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -40,14 +42,14 @@ export default function SettingsPage() {
 
   useEffect(() => {
     setName(profile?.display_name ?? "");
-    setAddress(profile?.address ?? "");
+    setCountry(profile?.address ?? null);
   }, [profile]);
 
   const initial = (profile?.display_name || user?.email || "?").toString().charAt(0).toUpperCase();
 
   const handleSaveProfile = async () => {
     setSavingProfile(true);
-    const { error } = await update({ display_name: name.trim() || null, address: address.trim() || null });
+    const { error } = await update({ display_name: name.trim() || null, address: country });
     setSavingProfile(false);
     if (error) toast.error(error);
     else toast.success(t("settings.saved"));
