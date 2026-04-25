@@ -109,7 +109,7 @@ export default function NotesPage() {
           <div className="flex-1 overflow-y-auto scrollbar-thin">
             {filtered.length === 0 ? (
               <div className="p-6 text-center text-sm text-muted-foreground">
-                {notes.length === 0 ? "No notes yet — create one." : "No matches."}
+                {notes.length === 0 ? t("notes.empty") : t("notes.noMatches")}
               </div>
             ) : (
               <ul className="p-2 space-y-1">
