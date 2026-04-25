@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useProfile } from "@/contexts/ProfileContext";
+import { LanguageSelector } from "@/components/LanguageSelector";
 import { toast } from "sonner";
 
 export default function AppShell() {
@@ -90,6 +91,9 @@ export default function AppShell() {
 
       {/* Main */}
       <main className="flex-1 min-w-0 pb-20 md:pb-0">
+        <header className="sticky top-0 z-30 flex items-center justify-end gap-2 border-b border-border/60 bg-background/80 px-4 py-2 backdrop-blur md:px-6">
+          <LanguageSelector compact />
+        </header>
         <Outlet />
       </main>
 
