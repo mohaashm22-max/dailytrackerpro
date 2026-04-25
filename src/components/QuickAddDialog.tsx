@@ -93,6 +93,7 @@ export default function QuickAddDialog({
   initialDate,
   onSaved,
 }: Props) {
+  const { t, format } = useLanguage();
   const [mode, setMode] = useState<Mode>("task");
   const [range, setRange] = useState<Range>("single");
   const [single, setSingle] = useState<Date | undefined>(initialDate ?? undefined);
