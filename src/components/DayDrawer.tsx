@@ -681,7 +681,7 @@ function SectionCard({
             className="h-7 mt-2 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
             onClick={onAddTask}
           >
-            <Plus className="h-3.5 w-3.5" /> Add task
+            <Plus className="h-3.5 w-3.5" /> {t("day.addTask")}
           </Button>
         </div>
       </CollapsibleContent>
