@@ -312,7 +312,7 @@ export default function AnalysisPage() {
             </div>
           </div>
           <div>
-            <h3 className="text-sm font-medium mb-2 text-muted-foreground">Task share by category</h3>
+            <h3 className="text-sm font-medium mb-2 text-muted-foreground">{t("analysis.taskShare")}</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
