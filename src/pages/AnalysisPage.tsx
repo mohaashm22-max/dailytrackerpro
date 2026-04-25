@@ -206,7 +206,7 @@ export default function AnalysisPage() {
       {/* Yearly chart */}
       <section className="rounded-2xl border border-border bg-card shadow-soft p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold">Yearly progress (avg % per month)</h2>
+          <h2 className="font-semibold">{t("analysis.yearlyProgress")}</h2>
         </div>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
