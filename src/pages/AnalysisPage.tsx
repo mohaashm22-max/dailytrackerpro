@@ -231,7 +231,7 @@ export default function AnalysisPage() {
       {/* Month picker */}
       <section className="rounded-2xl border border-border bg-card shadow-soft p-5 space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-semibold">Monthly analysis</h2>
+          <h2 className="font-semibold">{t("analysis.monthly")}</h2>
           <select
             value={monthKey}
             onChange={(e) => setMonthKey(e.target.value)}
