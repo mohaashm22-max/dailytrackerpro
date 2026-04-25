@@ -213,17 +213,17 @@ export default function QuickAddDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Quick add</DialogTitle>
+          <DialogTitle>{t("qa.title")}</DialogTitle>
           <DialogDescription>
-            Add a task, a whole section, or an entire block to one day, a date range, or every day of the year.
+            {t("qa.subtitle")}
           </DialogDescription>
         </DialogHeader>
 
         <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)} className="mt-2">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="task">Task</TabsTrigger>
-            <TabsTrigger value="section">Section</TabsTrigger>
-            <TabsTrigger value="block">Block</TabsTrigger>
+            <TabsTrigger value="task">{t("qa.tab.task")}</TabsTrigger>
+            <TabsTrigger value="section">{t("qa.tab.section")}</TabsTrigger>
+            <TabsTrigger value="block">{t("qa.tab.block")}</TabsTrigger>
           </TabsList>
 
           {/* Task tab */}
@@ -375,7 +375,7 @@ export default function QuickAddDialog({
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>Add</Button>
+          <Button onClick={handleSave}>{t("common.add")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
