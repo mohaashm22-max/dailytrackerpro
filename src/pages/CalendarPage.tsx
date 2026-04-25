@@ -84,9 +84,12 @@ export default function CalendarPage() {
     <div className="mx-auto max-w-5xl px-4 py-6 md:py-10">
       <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Calendar</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{t("calendar.title")}</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Tap any day to open its tasks. Tracker runs {format(startDate, "MMM d")} – {format(endDate, "MMM d, yyyy")}.
+            {t("calendar.subtitle", {
+              start: format(startDate, "MMM d"),
+              end: format(endDate, "MMM d, yyyy"),
+            })}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -95,7 +98,7 @@ export default function CalendarPage() {
             size="icon"
             disabled={!canPrev}
             onClick={() => setMonth((m) => addMonths(m, -1))}
-            aria-label="Previous month"
+            aria-label={t("calendar.prevMonth")}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -107,7 +110,7 @@ export default function CalendarPage() {
             size="icon"
             disabled={!canNext}
             onClick={() => setMonth((m) => addMonths(m, 1))}
-            aria-label="Next month"
+            aria-label={t("calendar.nextMonth")}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -120,15 +123,15 @@ export default function CalendarPage() {
               if (isInTracker(today)) setSelected(today);
             }}
           >
-            Today
+            {t("calendar.today")}
           </Button>
         </div>
       </header>
 
       <div className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
         <div className="grid grid-cols-7 border-b border-border bg-muted/40 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-            <div key={d} className="px-2 py-2 text-center">{d}</div>
+          {(["sun","mon","tue","wed","thu","fri","sat"] as const).map((d) => (
+            <div key={d} className="px-2 py-2 text-center">{t(`weekday.${d}`)}</div>
           ))}
         </div>
         <div className="grid grid-cols-7">
