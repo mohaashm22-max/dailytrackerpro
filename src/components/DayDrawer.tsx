@@ -611,6 +611,7 @@ function SectionCard({
   onToggle,
   onNote,
 }: SectionCardProps) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(true);
   const total = section.tasks.length;
   const done = section.tasks.filter((_, ti) => state.checks[taskKey(blockId, sectionIdx, ti)]).length;
