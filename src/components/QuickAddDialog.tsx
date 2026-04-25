@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Dialog,
   DialogContent,
@@ -42,13 +42,15 @@ function DatePickerField({
   value,
   onChange,
   label,
-  placeholder = "Pick a date",
+  placeholder,
 }: {
   value: Date | undefined;
   onChange: (d: Date | undefined) => void;
   label: string;
   placeholder?: string;
 }) {
+  const { format, t, locale } = useLanguage();
+  const ph = placeholder ?? t("qa.date");
   return (
     <div className="space-y-1.5">
       <Label className="text-xs">{label}</Label>
@@ -63,7 +65,7 @@ function DatePickerField({
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {value ? format(value, "PPP") : <span>{placeholder}</span>}
+            {value ? format(value, "PPP") : <span>{ph}</span>}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
@@ -74,6 +76,7 @@ function DatePickerField({
             defaultMonth={value ?? startDate}
             disabled={(d) => !isInTracker(d)}
             initialFocus
+            locale={locale}
             className={cn("p-3 pointer-events-auto")}
           />
         </PopoverContent>
@@ -90,6 +93,7 @@ export default function QuickAddDialog({
   initialDate,
   onSaved,
 }: Props) {
+  const { t, format } = useLanguage();
   const [mode, setMode] = useState<Mode>("task");
   const [range, setRange] = useState<Range>("single");
   const [single, setSingle] = useState<Date | undefined>(initialDate ?? undefined);
@@ -209,17 +213,17 @@ export default function QuickAddDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Quick add</DialogTitle>
+          <DialogTitle>{t("qa.title")}</DialogTitle>
           <DialogDescription>
-            Add a task, a whole section, or an entire block to one day, a date range, or every day of the year.
+            {t("qa.subtitle")}
           </DialogDescription>
         </DialogHeader>
 
         <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)} className="mt-2">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="task">Task</TabsTrigger>
-            <TabsTrigger value="section">Section</TabsTrigger>
-            <TabsTrigger value="block">Block</TabsTrigger>
+            <TabsTrigger value="task">{t("qa.tab.task")}</TabsTrigger>
+            <TabsTrigger value="section">{t("qa.tab.section")}</TabsTrigger>
+            <TabsTrigger value="block">{t("qa.tab.block")}</TabsTrigger>
           </TabsList>
 
           {/* Task tab */}
@@ -371,7 +375,7 @@ export default function QuickAddDialog({
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>Add</Button>
+          <Button onClick={handleSave}>{t("common.add")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

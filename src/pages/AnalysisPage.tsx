@@ -1,11 +1,10 @@
 import { useMemo, useState } from "react";
 import {
   addDays,
-  format,
+  format as dfFormat,
   parseISO,
   startOfMonth,
   endOfMonth,
-  isSameMonth,
   isWithinInterval,
 } from "date-fns";
 import {
@@ -27,6 +26,7 @@ import { dateKey, startDate, endDate } from "@/lib/dates";
 import { loadJSON } from "@/lib/storage";
 import { computeDayStats, DayState, emptyDayState } from "@/lib/dayProgress";
 import { COMMON_CATEGORIES } from "@/data/template";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface DayRow {
   date: Date;
@@ -70,6 +70,7 @@ const COLORS = [
 ];
 
 export default function AnalysisPage() {
+  const { t, format } = useLanguage();
   const allDays = useMemo(buildAllDays, []);
   const today = new Date();
   const defaultMonth = today >= startDate && today <= endDate ? today : startDate;
@@ -188,24 +189,24 @@ export default function AnalysisPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-6 md:py-10 space-y-8">
       <header>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Analysis</h1>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{t("analysis.title")}</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Track your monthly and yearly progress.
+          {t("analysis.subtitle")}
         </p>
       </header>
 
       {/* Year summary */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Year completion" value={`${yearStats.avgPercent}%`} sub={`${yearStats.totalDone} tasks done`} />
-        <StatCard label="Days tracked" value={`${yearStats.tracked}`} sub={`of ${yearStats.totalDays}`} />
-        <StatCard label="Current streak" value={`${yearStats.currentStreak}`} sub="days ≥ 50%" tone="accent" />
-        <StatCard label="Best streak" value={`${yearStats.bestStreak}`} sub="days ≥ 50%" tone="primary" />
+        <StatCard label={t("analysis.yearCompletion")} value={`${yearStats.avgPercent}%`} sub={t("analysis.tasksDone", { n: yearStats.totalDone })} />
+        <StatCard label={t("analysis.daysTracked")} value={`${yearStats.tracked}`} sub={t("analysis.ofN", { n: yearStats.totalDays })} />
+        <StatCard label={t("analysis.currentStreak")} value={`${yearStats.currentStreak}`} sub={t("analysis.daysGte50")} tone="accent" />
+        <StatCard label={t("analysis.bestStreak")} value={`${yearStats.bestStreak}`} sub={t("analysis.daysGte50")} tone="primary" />
       </section>
 
       {/* Yearly chart */}
       <section className="rounded-2xl border border-border bg-card shadow-soft p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold">Yearly progress (avg % per month)</h2>
+          <h2 className="font-semibold">{t("analysis.yearlyProgress")}</h2>
         </div>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
@@ -219,7 +220,7 @@ export default function AnalysisPage() {
                   border: "1px solid hsl(var(--border))",
                   borderRadius: 12,
                 }}
-                formatter={(v: number) => [`${v}%`, "Completion"]}
+                formatter={(v: number) => [`${v}%`, t("analysis.completion")]}
               />
               <Bar dataKey="avgPercent" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
             </BarChart>
@@ -230,7 +231,7 @@ export default function AnalysisPage() {
       {/* Month picker */}
       <section className="rounded-2xl border border-border bg-card shadow-soft p-5 space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-semibold">Monthly analysis</h2>
+          <h2 className="font-semibold">{t("analysis.monthly")}</h2>
           <select
             value={monthKey}
             onChange={(e) => setMonthKey(e.target.value)}
@@ -245,21 +246,21 @@ export default function AnalysisPage() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard label="Avg completion" value={`${monthAvg}%`} />
+          <StatCard label={t("analysis.avgCompletion")} value={`${monthAvg}%`} />
           <StatCard
-            label="Best day"
+            label={t("analysis.bestDay")}
             value={monthBestDay && monthBestDay.percent > 0 ? `${Math.round(monthBestDay.percent * 100)}%` : "—"}
             sub={monthBestDay && monthBestDay.percent > 0 ? format(monthBestDay.date, "MMM d") : ""}
           />
           <StatCard
-            label="Days ≥ 50%"
+            label={t("analysis.daysAt50")}
             value={`${monthDays.filter((r) => r.percent >= 0.5).length}`}
           />
-          <StatCard label="Tasks done" value={`${monthDays.reduce((n, r) => n + r.done, 0)}`} />
+          <StatCard label={t("analysis.tasksDoneShort")} value={`${monthDays.reduce((n, r) => n + r.done, 0)}`} />
         </div>
 
         <div>
-          <h3 className="text-sm font-medium mb-2 text-muted-foreground">Daily completion</h3>
+          <h3 className="text-sm font-medium mb-2 text-muted-foreground">{t("analysis.dailyCompletion")}</h3>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={monthDailyData}>
@@ -272,8 +273,8 @@ export default function AnalysisPage() {
                     border: "1px solid hsl(var(--border))",
                     borderRadius: 12,
                   }}
-                  formatter={(v: number) => [`${v}%`, "Completion"]}
-                  labelFormatter={(l) => `Day ${l}`}
+                  formatter={(v: number) => [`${v}%`, t("analysis.completion")]}
+                  labelFormatter={(l) => `${t("analysis.day")} ${l}`}
                 />
                 <Line
                   type="monotone"
@@ -290,7 +291,7 @@ export default function AnalysisPage() {
 
         <div className="grid md:grid-cols-2 gap-5">
           <div>
-            <h3 className="text-sm font-medium mb-2 text-muted-foreground">By category</h3>
+            <h3 className="text-sm font-medium mb-2 text-muted-foreground">{t("analysis.byCategory")}</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={monthCategoryData} layout="vertical" margin={{ left: 10 }}>
@@ -303,7 +304,7 @@ export default function AnalysisPage() {
                       border: "1px solid hsl(var(--border))",
                       borderRadius: 12,
                     }}
-                    formatter={(v: number) => [`${v}%`, "Completion"]}
+                    formatter={(v: number) => [`${v}%`, t("analysis.completion")]}
                   />
                   <Bar dataKey="percent" fill="hsl(var(--accent))" radius={[0, 8, 8, 0]} />
                 </BarChart>
@@ -311,7 +312,7 @@ export default function AnalysisPage() {
             </div>
           </div>
           <div>
-            <h3 className="text-sm font-medium mb-2 text-muted-foreground">Task share by category</h3>
+            <h3 className="text-sm font-medium mb-2 text-muted-foreground">{t("analysis.taskShare")}</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>

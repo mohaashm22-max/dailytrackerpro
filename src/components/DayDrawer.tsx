@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { format } from "date-fns";
+import { useLanguage, statusKeyFromPercent } from "@/contexts/LanguageContext";
 import {
   Plus,
   Trash2,
@@ -128,12 +128,14 @@ const isRTL = (s: string) => /[\u0600-\u06FF]/.test(s);
 /* ---------- Day editor ---------- */
 
 function DayEditor({ date }: { date: Date }) {
+  const { t, format } = useLanguage();
   const key = `day:${dateKey(date)}`;
   const [raw, setState] = useLocalState<DayState>(key, emptyDayState);
   const defaultDayName = workoutForDate(date);
   const state = useMemo(() => hydrateDayState(raw, defaultDayName), [raw, defaultDayName]);
   const stats = useMemo(() => computeDayStats(state), [state]);
   const status = statusFromPercent(stats.percent);
+  const statusLabel = t(statusKeyFromPercent(stats.percent));
 
   // Persist hydration once on first open so storage shape is always normalized.
   useEffect(() => {
@@ -166,8 +168,8 @@ function DayEditor({ date }: { date: Date }) {
       ...bs,
       {
         id: `block-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-        title: "New block",
-        sections: [{ title: "New section", tasks: [] }],
+        title: t("day.newBlock"),
+        sections: [{ title: t("day.newSection"), tasks: [] }],
       },
     ]);
 
@@ -191,7 +193,7 @@ function DayEditor({ date }: { date: Date }) {
     updateBlocks((bs) =>
       bs.map((b) =>
         b.id === blockId
-          ? { ...b, sections: [...b.sections, { title: "New section", tasks: [] }] }
+          ? { ...b, sections: [...b.sections, { title: t("day.newSection"), tasks: [] }] }
           : b,
       ),
     );
@@ -234,7 +236,7 @@ function DayEditor({ date }: { date: Date }) {
           ? {
               ...b,
               sections: b.sections.map((s, i) =>
-                i === sectionIdx ? { ...s, tasks: [...s.tasks, "New task"] } : s,
+                i === sectionIdx ? { ...s, tasks: [...s.tasks, t("day.newTask")] } : s,
               ),
             }
           : b,
@@ -296,7 +298,7 @@ function DayEditor({ date }: { date: Date }) {
               {format(date, "EEEE, MMMM d, yyyy")}
             </SheetTitle>
             <SheetDescription className="mt-1 flex items-center gap-2">
-              <span className="text-xs text-muted-foreground shrink-0">Day name:</span>
+              <span className="text-xs text-muted-foreground shrink-0">{t("day.dayName")}</span>
               <Input
                 value={state.dayName ?? ""}
                 onChange={(e) => setDayName(e.target.value)}
@@ -308,11 +310,11 @@ function DayEditor({ date }: { date: Date }) {
           <div className="flex items-center gap-2 shrink-0">
             {stats.percent > 0 && (
               <Badge className={status.className} variant="secondary">
-                {status.label}
+                {statusLabel}
               </Badge>
             )}
             <SheetClose asChild>
-              <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Close">
+              <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={t("common.close")}>
                 <X className="h-4 w-4" />
               </Button>
             </SheetClose>
@@ -321,7 +323,7 @@ function DayEditor({ date }: { date: Date }) {
         {stats.total > 0 && (
           <div className="mt-3">
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
-              <span>{stats.done} / {stats.total} tasks</span>
+              <span>{t("day.tasksOf", { done: stats.done, total: stats.total })}</span>
               <span>{Math.round(stats.percent * 100)}%</span>
             </div>
             <Progress value={stats.percent * 100} className="h-2" />
@@ -332,7 +334,7 @@ function DayEditor({ date }: { date: Date }) {
       <div className="px-6 py-6 space-y-4">
         {state.blocks!.length === 0 && (
           <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-6 text-center text-sm text-muted-foreground">
-            No blocks yet. Add a block to start organizing this day.
+            {t("day.noBlocks")}
           </div>
         )}
 
@@ -355,7 +357,7 @@ function DayEditor({ date }: { date: Date }) {
         ))}
 
         <Button variant="outline" className="w-full gap-2" onClick={addBlock}>
-          <Plus className="h-4 w-4" /> Add block
+          <Plus className="h-4 w-4" /> {t("day.addBlock")}
         </Button>
 
         {/* Linked notes from Notes page */}
@@ -363,7 +365,7 @@ function DayEditor({ date }: { date: Date }) {
 
         {/* Day note */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-soft" dir="ltr">
-          <h3 className="font-semibold mb-3 text-left">📝 How was your day?</h3>
+          <h3 className="font-semibold mb-3 text-left">{t("day.dayNote")}</h3>
           <Textarea
             value={state.dayNote ?? ""}
             onChange={(e) =>
@@ -382,6 +384,7 @@ function DayEditor({ date }: { date: Date }) {
 /* ---------- Linked notes (from Notes page) ---------- */
 
 function LinkedNotesList({ dateKey }: { dateKey: string }) {
+  const { t } = useLanguage();
   const [notes] = useLocalState<Array<{ id: string; title: string; body: string; updatedAt: number; linkedDate?: string | null }>>("notes", []);
   const linked = notes.filter((n) => n.linkedDate === dateKey);
   if (linked.length === 0) return null;
@@ -389,12 +392,12 @@ function LinkedNotesList({ dateKey }: { dateKey: string }) {
     <div className="rounded-2xl border border-border bg-card p-5 shadow-soft">
       <h3 className="font-semibold mb-3 flex items-center gap-2">
         <NotebookPen className="h-4 w-4 text-primary" />
-        Linked notes
+        {t("day.linkedNotes")}
       </h3>
       <ul className="space-y-3">
         {linked.map((n) => (
           <li key={n.id} className="rounded-lg border border-border/60 bg-muted/30 p-3">
-            <p className="text-sm font-semibold mb-1">{n.title || "Untitled"}</p>
+            <p className="text-sm font-semibold mb-1">{n.title || t("common.untitled")}</p>
             <div
               className="text-sm text-muted-foreground leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
               dangerouslySetInnerHTML={{ __html: n.body || "" }}
@@ -437,6 +440,7 @@ function BlockCard({
   onToggle,
   onNote,
 }: BlockCardProps) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(true);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(block.title);
@@ -499,7 +503,7 @@ function BlockCard({
                 className="font-bold text-base flex-1 min-w-0 truncate"
                 dir={rtl ? "rtl" : "ltr"}
               >
-                {block.title || <span className="text-muted-foreground italic">Untitled block</span>}
+                {block.title || <span className="text-muted-foreground italic">{t("day.untitledBlock")}</span>}
               </h3>
             )}
           </button>
@@ -517,7 +521,7 @@ function BlockCard({
                 e.stopPropagation();
                 setEditingTitle(true);
               }}
-              aria-label="Rename block"
+              aria-label={t("day.renameBlock")}
             >
               <Pencil className="h-3.5 w-3.5" />
             </Button>
@@ -530,7 +534,7 @@ function BlockCard({
               e.stopPropagation();
               onDelete();
             }}
-            aria-label="Delete block"
+            aria-label={t("day.deleteBlock")}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
@@ -545,7 +549,7 @@ function BlockCard({
         <div className="p-3 space-y-2">
           {block.sections.length === 0 && (
             <p className="text-xs text-muted-foreground italic px-2 py-3 text-center">
-              No sections yet.
+              {t("day.noSections")}
             </p>
           )}
           {block.sections.map((section, si) => (
@@ -570,7 +574,7 @@ function BlockCard({
             className="w-full gap-2 text-xs text-muted-foreground hover:text-foreground"
             onClick={onAddSection}
           >
-            <Plus className="h-3.5 w-3.5" /> Add section
+            <Plus className="h-3.5 w-3.5" /> {t("day.addSection")}
           </Button>
         </div>
       </CollapsibleContent>
@@ -607,6 +611,7 @@ function SectionCard({
   onToggle,
   onNote,
 }: SectionCardProps) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(true);
   const total = section.tasks.length;
   const done = section.tasks.filter((_, ti) => state.checks[taskKey(blockId, sectionIdx, ti)]).length;
@@ -646,7 +651,7 @@ function SectionCard({
           variant="ghost"
           className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
           onClick={onDelete}
-          aria-label="Delete section"
+          aria-label={t("day.deleteSection")}
         >
           <Trash2 className="h-3 w-3" />
         </Button>
@@ -676,7 +681,7 @@ function SectionCard({
             className="h-7 mt-2 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
             onClick={onAddTask}
           >
-            <Plus className="h-3.5 w-3.5" /> Add task
+            <Plus className="h-3.5 w-3.5" /> {t("day.addTask")}
           </Button>
         </div>
       </CollapsibleContent>
@@ -707,6 +712,7 @@ function TaskRow({
   onUpdateTask: (text: string) => void;
   onDeleteTask: () => void;
 }) {
+  const { t } = useLanguage();
   const k = taskKey(blockId, sectionIdx, taskIdx);
   const checked = !!state.checks[k];
   const taskRTL = isRTL(task);
@@ -757,7 +763,7 @@ function TaskRow({
               (checked ? "text-muted-foreground line-through" : "text-foreground")
             }
           >
-            {task || <span className="text-muted-foreground italic">Empty task</span>}
+            {task || <span className="text-muted-foreground italic">{t("day.emptyTask")}</span>}
           </button>
         )}
         <Button
@@ -765,7 +771,7 @@ function TaskRow({
           variant="ghost"
           className="h-7 w-7 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-destructive"
           onClick={onDeleteTask}
-          aria-label="Delete task"
+          aria-label={t("day.deleteTask")}
         >
           <Trash2 className="h-3.5 w-3.5" />
         </Button>

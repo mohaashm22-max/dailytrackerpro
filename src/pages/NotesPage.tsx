@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { format, parseISO } from "date-fns";
+import { parseISO } from "date-fns";
 import { Plus, Trash2, Search, CalendarIcon, Link2Off } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { useLocalState } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import { dateKey, startDate, isInTracker } from "@/lib/dates";
 import RichTextEditor from "@/components/RichTextEditor";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Note {
   id: string;
@@ -37,6 +38,7 @@ function stripHtml(html: string): string {
 }
 
 export default function NotesPage() {
+  const { t, format, locale } = useLanguage();
   const [notes, setNotes] = useLocalState<Note[]>("notes", []);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -80,14 +82,14 @@ export default function NotesPage() {
     <div className="mx-auto max-w-6xl px-4 py-6 md:py-10">
       <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Notes</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{t("notes.title")}</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Free-form thoughts, reminders, and ideas.
+            {t("notes.subtitle")}
           </p>
         </div>
         <Button onClick={create} className="gap-2">
           <Plus className="h-4 w-4" />
-          New note
+          {t("notes.new")}
         </Button>
       </header>
 
@@ -107,7 +109,7 @@ export default function NotesPage() {
           <div className="flex-1 overflow-y-auto scrollbar-thin">
             {filtered.length === 0 ? (
               <div className="p-6 text-center text-sm text-muted-foreground">
-                {notes.length === 0 ? "No notes yet — create one." : "No matches."}
+                {notes.length === 0 ? t("notes.empty") : t("notes.noMatches")}
               </div>
             ) : (
               <ul className="p-2 space-y-1">
@@ -126,10 +128,10 @@ export default function NotesPage() {
                       >
                         <div className="min-w-0">
                           <p className="text-sm font-medium truncate">
-                            {n.title || "Untitled note"}
+                            {n.title || t("notes.untitled")}
                           </p>
                           <p className="text-xs text-muted-foreground truncate">
-                            {preview || "No content"}
+                            {preview || t("notes.noContent")}
                           </p>
                           <div className="flex items-center gap-2 mt-0.5">
                             <p className="text-[10px] text-muted-foreground">
@@ -171,18 +173,18 @@ export default function NotesPage() {
                   className="text-xl md:text-2xl font-bold border-0 px-0 focus-visible:ring-0 shadow-none h-auto bg-transparent text-left"
                 />
                 <p className="text-xs text-muted-foreground mt-1 text-left">
-                  Last updated {format(active.updatedAt, "PPp")}
+                  {t("notes.lastUpdated", { when: format(active.updatedAt, "PPp") })}
                 </p>
               </div>
 
               {/* Date link */}
               <div className="flex flex-wrap items-center gap-2 text-xs">
-                <Label className="text-xs text-muted-foreground">Linked day:</Label>
+                <Label className="text-xs text-muted-foreground">{t("notes.linkedDay")}</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" size="sm" className="h-8 gap-2">
                       <CalendarIcon className="h-3.5 w-3.5" />
-                      {linkedDateObj ? format(linkedDateObj, "PPP") : "Link to a calendar day"}
+                      {linkedDateObj ? format(linkedDateObj, "PPP") : t("notes.linkPick")}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -193,6 +195,7 @@ export default function NotesPage() {
                       defaultMonth={linkedDateObj ?? startDate}
                       disabled={(d) => !isInTracker(d)}
                       initialFocus
+                      locale={locale}
                       className="p-3 pointer-events-auto"
                     />
                   </PopoverContent>
@@ -205,7 +208,7 @@ export default function NotesPage() {
                     onClick={() => update({ linkedDate: null })}
                   >
                     <Link2Off className="h-3.5 w-3.5" />
-                    Unlink
+                    {t("notes.unlink")}
                   </Button>
                 )}
               </div>
@@ -218,7 +221,7 @@ export default function NotesPage() {
             </div>
           ) : (
             <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
-              Select or create a note to begin.
+              {t("notes.selectOrCreate")}
             </div>
           )}
         </section>

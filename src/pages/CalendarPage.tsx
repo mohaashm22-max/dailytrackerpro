@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import {
   addMonths,
   endOfMonth,
-  format,
   isSameDay,
   isSameMonth,
   startOfMonth,
@@ -19,6 +18,7 @@ import { loadJSON, saveJSON } from "@/lib/storage";
 import { computeDayStats, DayState, emptyDayState, hydrateDayState } from "@/lib/dayProgress";
 import DayDrawer from "@/components/DayDrawer";
 import QuickAddDialog from "@/components/QuickAddDialog";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 function monthMatrix(month: Date): Date[][] {
   const start = startOfWeek(startOfMonth(month), { weekStartsOn: 0 });
@@ -35,6 +35,7 @@ function monthMatrix(month: Date): Date[][] {
 }
 
 export default function CalendarPage() {
+  const { t, format } = useLanguage();
   const today = new Date();
   const initialMonth = today >= startDate && today <= endDate ? today : startDate;
   const [month, setMonth] = useState(startOfMonth(initialMonth));
@@ -83,9 +84,12 @@ export default function CalendarPage() {
     <div className="mx-auto max-w-5xl px-4 py-6 md:py-10">
       <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Calendar</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{t("calendar.title")}</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Tap any day to open its tasks. Tracker runs {format(startDate, "MMM d")} – {format(endDate, "MMM d, yyyy")}.
+            {t("calendar.subtitle", {
+              start: format(startDate, "MMM d"),
+              end: format(endDate, "MMM d, yyyy"),
+            })}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -94,7 +98,7 @@ export default function CalendarPage() {
             size="icon"
             disabled={!canPrev}
             onClick={() => setMonth((m) => addMonths(m, -1))}
-            aria-label="Previous month"
+            aria-label={t("calendar.prevMonth")}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -106,7 +110,7 @@ export default function CalendarPage() {
             size="icon"
             disabled={!canNext}
             onClick={() => setMonth((m) => addMonths(m, 1))}
-            aria-label="Next month"
+            aria-label={t("calendar.nextMonth")}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -119,15 +123,15 @@ export default function CalendarPage() {
               if (isInTracker(today)) setSelected(today);
             }}
           >
-            Today
+            {t("calendar.today")}
           </Button>
         </div>
       </header>
 
       <div className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
         <div className="grid grid-cols-7 border-b border-border bg-muted/40 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-            <div key={d} className="px-2 py-2 text-center">{d}</div>
+          {(["sun","mon","tue","wed","thu","fri","sat"] as const).map((d) => (
+            <div key={d} className="px-2 py-2 text-center">{t(`weekday.${d}`)}</div>
           ))}
         </div>
         <div className="grid grid-cols-7">
@@ -203,7 +207,7 @@ export default function CalendarPage() {
                           setEditingKey(k);
                         }}
                         className="group/name flex w-full flex-col items-start gap-0.5 rounded px-1 py-0.5 text-left hover:bg-muted/70 min-h-[1.25rem]"
-                        title="Rename this day"
+                        title={t("calendar.renameDay")}
                       >
                         <span className="flex w-full items-center gap-1">
                           <span className="truncate flex-1 text-[11px] font-medium text-foreground/80">
@@ -267,7 +271,7 @@ export default function CalendarPage() {
           setQuickAddOpen(true);
         }}
         className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-40"
-        aria-label="Quick add task or section"
+        aria-label={t("calendar.quickAdd")}
       >
         <Plus className="h-6 w-6" />
       </Button>
