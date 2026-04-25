@@ -128,12 +128,14 @@ const isRTL = (s: string) => /[\u0600-\u06FF]/.test(s);
 /* ---------- Day editor ---------- */
 
 function DayEditor({ date }: { date: Date }) {
+  const { t, format } = useLanguage();
   const key = `day:${dateKey(date)}`;
   const [raw, setState] = useLocalState<DayState>(key, emptyDayState);
   const defaultDayName = workoutForDate(date);
   const state = useMemo(() => hydrateDayState(raw, defaultDayName), [raw, defaultDayName]);
   const stats = useMemo(() => computeDayStats(state), [state]);
   const status = statusFromPercent(stats.percent);
+  const statusLabel = t(statusKeyFromPercent(stats.percent));
 
   // Persist hydration once on first open so storage shape is always normalized.
   useEffect(() => {
