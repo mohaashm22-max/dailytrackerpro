@@ -365,7 +365,7 @@ function DayEditor({ date }: { date: Date }) {
 
         {/* Day note */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-soft" dir="ltr">
-          <h3 className="font-semibold mb-3 text-left">📝 How was your day?</h3>
+          <h3 className="font-semibold mb-3 text-left">{t("day.dayNote")}</h3>
           <Textarea
             value={state.dayNote ?? ""}
             onChange={(e) =>
