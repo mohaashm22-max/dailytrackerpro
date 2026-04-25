@@ -65,7 +65,7 @@ function DatePickerField({
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {value ? format(value, "PPP") : <span>{placeholder}</span>}
+            {value ? format(value, "PPP") : <span>{ph}</span>}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
@@ -76,6 +76,7 @@ function DatePickerField({
             defaultMonth={value ?? startDate}
             disabled={(d) => !isInTracker(d)}
             initialFocus
+            locale={locale}
             className={cn("p-3 pointer-events-auto")}
           />
         </PopoverContent>
