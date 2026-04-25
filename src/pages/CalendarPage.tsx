@@ -207,7 +207,7 @@ export default function CalendarPage() {
                           setEditingKey(k);
                         }}
                         className="group/name flex w-full flex-col items-start gap-0.5 rounded px-1 py-0.5 text-left hover:bg-muted/70 min-h-[1.25rem]"
-                        title="Rename this day"
+                        title={t("calendar.renameDay")}
                       >
                         <span className="flex w-full items-center gap-1">
                           <span className="truncate flex-1 text-[11px] font-medium text-foreground/80">
