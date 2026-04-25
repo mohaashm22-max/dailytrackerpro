@@ -189,18 +189,18 @@ export default function AnalysisPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-6 md:py-10 space-y-8">
       <header>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Analysis</h1>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{t("analysis.title")}</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Track your monthly and yearly progress.
+          {t("analysis.subtitle")}
         </p>
       </header>
 
       {/* Year summary */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Year completion" value={`${yearStats.avgPercent}%`} sub={`${yearStats.totalDone} tasks done`} />
-        <StatCard label="Days tracked" value={`${yearStats.tracked}`} sub={`of ${yearStats.totalDays}`} />
-        <StatCard label="Current streak" value={`${yearStats.currentStreak}`} sub="days ≥ 50%" tone="accent" />
-        <StatCard label="Best streak" value={`${yearStats.bestStreak}`} sub="days ≥ 50%" tone="primary" />
+        <StatCard label={t("analysis.yearCompletion")} value={`${yearStats.avgPercent}%`} sub={t("analysis.tasksDone", { n: yearStats.totalDone })} />
+        <StatCard label={t("analysis.daysTracked")} value={`${yearStats.tracked}`} sub={t("analysis.ofN", { n: yearStats.totalDays })} />
+        <StatCard label={t("analysis.currentStreak")} value={`${yearStats.currentStreak}`} sub={t("analysis.daysGte50")} tone="accent" />
+        <StatCard label={t("analysis.bestStreak")} value={`${yearStats.bestStreak}`} sub={t("analysis.daysGte50")} tone="primary" />
       </section>
 
       {/* Yearly chart */}
