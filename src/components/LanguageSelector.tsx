@@ -8,6 +8,8 @@ import {
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { findLanguage } from "@/data/languages";
+import { countryForLanguage } from "@/data/languageFlags";
+import { Flag } from "@/components/Flag";
 
 interface Props {
   /** Compact icon-only trigger (for nav bars). */
@@ -32,7 +34,7 @@ export function LanguageSelector({ compact = false, align = "end", className }: 
             aria-label={t("lang.select")}
             className={cn("h-9 gap-1.5 px-2", className)}
           >
-            <span className="text-base leading-none" aria-hidden>{current?.flag ?? "🌐"}</span>
+            <Flag country={countryForLanguage(lang)} alt={current?.name} />
             <span className="text-xs font-medium uppercase">{current?.code ?? "en"}</span>
           </Button>
         ) : (
@@ -44,7 +46,7 @@ export function LanguageSelector({ compact = false, align = "end", className }: 
             className={cn("min-w-[10rem] justify-between font-normal", className)}
           >
             <span className="flex items-center gap-2 truncate">
-              <span aria-hidden>{current?.flag ?? "🌐"}</span>
+              <Flag country={countryForLanguage(lang)} alt={current?.name} />
               <span className="truncate">{current?.native ?? "English"}</span>
             </span>
           </Button>
@@ -70,8 +72,9 @@ export function LanguageSelector({ compact = false, align = "end", className }: 
                     setLang(l.code);
                     setOpen(false);
                   }}
+                  className="gap-2"
                 >
-                  <span className="me-2" aria-hidden>{l.flag}</span>
+                  <Flag country={countryForLanguage(l.code)} alt={l.name} />
                   <span className="flex-1 truncate">
                     <span className="font-medium">{l.native}</span>
                     <span className="ms-2 text-xs text-muted-foreground">{l.name}</span>
