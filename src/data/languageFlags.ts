@@ -3,7 +3,7 @@
 export const LANGUAGE_COUNTRY: Record<string, string> = {
   en: "GB", ar: "SA", es: "ES", fr: "FR", de: "DE", it: "IT", pt: "PT",
   ru: "RU", zh: "CN", ja: "JP", ko: "KR", hi: "IN", bn: "BD", ur: "PK",
-  fa: "IR", he: "IL", tr: "TR", id: "ID", ms: "MY", vi: "VN", th: "TH",
+  fa: "IR", tr: "TR", id: "ID", ms: "MY", vi: "VN", th: "TH",
   nl: "NL", pl: "PL", uk: "UA", sv: "SE", no: "NO", da: "DK", fi: "FI",
   el: "GR", cs: "CZ", ro: "RO", hu: "HU", sk: "SK", bg: "BG", sr: "RS",
   hr: "HR", sw: "KE", am: "ET", ta: "IN", te: "IN", ml: "IN", mr: "IN",

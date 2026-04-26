@@ -25,7 +25,7 @@ export const LANGUAGES: AppLanguage[] = [
   { code: "bn", name: "Bengali", native: "বাংলা", flag: "🇧🇩" },
   { code: "ur", name: "Urdu", native: "اردو", rtl: true, flag: "🇵🇰" },
   { code: "fa", name: "Persian", native: "فارسی", rtl: true, flag: "🇮🇷" },
-  { code: "he", name: "Hebrew", native: "עברית", rtl: true, flag: "🇮🇱" },
+  
   { code: "tr", name: "Turkish", native: "Türkçe", flag: "🇹🇷" },
   { code: "id", name: "Indonesian", native: "Bahasa Indonesia", flag: "🇮🇩" },
   { code: "ms", name: "Malay", native: "Bahasa Melayu", flag: "🇲🇾" },
