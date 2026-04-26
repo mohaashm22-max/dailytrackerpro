@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, ReactNode, use
 import { LANGUAGES, RTL_CODES } from "@/data/languages";
 import { tFormat, localeFor } from "@/lib/i18nDate";
 import type { Locale } from "date-fns";
+import { EXTRA_DICTS } from "@/i18n/translations";
 
 export type Lang = string;
 
@@ -434,7 +435,7 @@ const AR: Dict = {
   "auth.setNew.updated": "تم تحديث كلمة المرور",
 };
 
-const DICTS: Record<string, Dict> = { en: EN, ar: AR };
+const DICTS: Record<string, Dict> = { en: EN, ar: AR, ...EXTRA_DICTS };
 
 interface Ctx {
   lang: Lang;
