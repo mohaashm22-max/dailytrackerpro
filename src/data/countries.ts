@@ -87,7 +87,7 @@ export const COUNTRIES: Country[] = [
   { code: "IR", name: "Iran", flag: "🇮🇷" },
   { code: "IQ", name: "Iraq", flag: "🇮🇶" },
   { code: "IE", name: "Ireland", flag: "🇮🇪" },
-  { code: "IL", name: "Israel", flag: "🇮🇱" },
+  
   { code: "IT", name: "Italy", flag: "🇮🇹" },
   { code: "JM", name: "Jamaica", flag: "🇯🇲" },
   { code: "JP", name: "Japan", flag: "🇯🇵" },

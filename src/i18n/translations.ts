@@ -1066,6 +1066,6 @@ export const UK: Dict = {
 
 export const EXTRA_DICTS: Record<string, Dict> = {
   fr: FR, es: ES, de: DE, it: IT, pt: PT, ru: RU, zh: ZH, ja: JA, ko: KO,
-  hi: HI, tr: TR, nl: NL, id: ID, ur: UR, fa: FA, he: HE, pl: PL, sv: SV,
+  hi: HI, tr: TR, nl: NL, id: ID, ur: UR, fa: FA, pl: PL, sv: SV,
   vi: VI, th: TH, uk: UK,
 };
