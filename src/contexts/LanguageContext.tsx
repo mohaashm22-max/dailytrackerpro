@@ -435,7 +435,7 @@ const AR: Dict = {
   "auth.setNew.updated": "تم تحديث كلمة المرور",
 };
 
-const DICTS: Record<string, Dict> = { en: EN, ar: AR };
+const DICTS: Record<string, Dict> = { en: EN, ar: AR, ...EXTRA_DICTS };
 
 interface Ctx {
   lang: Lang;
