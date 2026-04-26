@@ -132,25 +132,7 @@ export default function AnalysisPage() {
     };
   }, [allDays]);
 
-  // Monthly category breakdown
-  const monthCategoryData = useMemo(() => {
-    const acc = new Map<string, { title: string; done: number; total: number }>();
-    monthDays.forEach((r) => {
-      r.perCategory.forEach((c) => {
-        const cur = acc.get(c.id) ?? { title: c.title, done: 0, total: 0 };
-        cur.done += c.done;
-        cur.total += c.total;
-        acc.set(c.id, cur);
-      });
-    });
-    return Array.from(acc.entries()).map(([id, v]) => ({
-      id,
-      name: v.title.replace(/[\u{1F300}-\u{1FAFF}]/gu, "").trim().slice(0, 18),
-      done: v.done,
-      total: v.total,
-      percent: v.total ? Math.round((v.done / v.total) * 100) : 0,
-    }));
-  }, [monthDays]);
+
 
   const monthDailyData = monthDays.map((r) => ({
     day: format(r.date, "d"),
