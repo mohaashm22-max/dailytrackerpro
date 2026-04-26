@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, ReactNode, use
 import { LANGUAGES, RTL_CODES } from "@/data/languages";
 import { tFormat, localeFor } from "@/lib/i18nDate";
 import type { Locale } from "date-fns";
+import { EXTRA_DICTS } from "@/i18n/translations";
 
 export type Lang = string;
 
