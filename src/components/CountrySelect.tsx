@@ -8,6 +8,7 @@ import {
 import { cn } from "@/lib/utils";
 import { COUNTRIES, findCountry } from "@/data/countries";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Flag } from "@/components/Flag";
 
 interface Props {
   value: string | null;
@@ -35,7 +36,7 @@ export function CountrySelect({ value, onChange, id, className }: Props) {
           <span className="flex items-center gap-2 truncate">
             {selected ? (
               <>
-                <span aria-hidden>{selected.flag}</span>
+                <Flag country={selected.code} alt={selected.name} />
                 <span className="truncate">{selected.name}</span>
               </>
             ) : (
@@ -59,8 +60,9 @@ export function CountrySelect({ value, onChange, id, className }: Props) {
                     onChange(c.code === value ? null : c.code);
                     setOpen(false);
                   }}
+                  className="gap-2"
                 >
-                  <span className="me-2" aria-hidden>{c.flag}</span>
+                  <Flag country={c.code} alt={c.name} />
                   <span className="flex-1 truncate">{c.name}</span>
                   <Check
                     className={cn(
