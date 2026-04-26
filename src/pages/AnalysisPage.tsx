@@ -289,58 +289,6 @@ export default function AnalysisPage() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-5">
-          <div>
-            <h3 className="text-sm font-medium mb-2 text-muted-foreground">{t("analysis.byCategory")}</h3>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthCategoryData} layout="vertical" margin={{ left: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
-                  <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} unit="%" domain={[0, 100]} />
-                  <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} width={110} />
-                  <Tooltip
-                    contentStyle={{
-                      background: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: 12,
-                    }}
-                    formatter={(v: number) => [`${v}%`, t("analysis.completion")]}
-                  />
-                  <Bar dataKey="percent" fill="hsl(var(--accent))" radius={[0, 8, 8, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-          <div>
-            <h3 className="text-sm font-medium mb-2 text-muted-foreground">{t("analysis.taskShare")}</h3>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={monthCategoryData.filter((c) => c.done > 0)}
-                    dataKey="done"
-                    nameKey="name"
-                    innerRadius={50}
-                    outerRadius={85}
-                    paddingAngle={2}
-                  >
-                    {monthCategoryData.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Tooltip
-                    contentStyle={{
-                      background: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: 12,
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
       </section>
     </div>
   );
