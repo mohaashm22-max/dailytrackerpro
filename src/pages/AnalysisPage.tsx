@@ -17,15 +17,10 @@ import {
   CartesianGrid,
   LineChart,
   Line,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
 } from "recharts";
 import { dateKey, startDate, endDate } from "@/lib/dates";
 import { loadJSON } from "@/lib/storage";
 import { computeDayStats, DayState, emptyDayState } from "@/lib/dayProgress";
-import { COMMON_CATEGORIES } from "@/data/template";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface DayRow {
@@ -56,18 +51,6 @@ function buildAllDays(): DayRow[] {
   }
   return out;
 }
-
-const COLORS = [
-  "hsl(215 70% 55%)",
-  "hsl(160 55% 50%)",
-  "hsl(35 92% 60%)",
-  "hsl(280 60% 60%)",
-  "hsl(190 70% 55%)",
-  "hsl(340 70% 60%)",
-  "hsl(120 50% 50%)",
-  "hsl(45 90% 55%)",
-  "hsl(255 60% 65%)",
-];
 
 export default function AnalysisPage() {
   const { t, format } = useLanguage();
