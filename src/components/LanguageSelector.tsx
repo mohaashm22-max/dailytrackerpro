@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Globe } from "lucide-react";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -28,11 +28,12 @@ export function LanguageSelector({ compact = false, align = "end", className }: 
           <Button
             type="button"
             variant="ghost"
-            size="icon"
+            size="sm"
             aria-label={t("lang.select")}
-            className={cn("h-9 w-9", className)}
+            className={cn("h-9 gap-1.5 px-2", className)}
           >
-            <Globe className="h-4 w-4" />
+            <span className="text-base leading-none" aria-hidden>{current?.flag ?? "🌐"}</span>
+            <span className="text-xs font-medium uppercase">{current?.code ?? "en"}</span>
           </Button>
         ) : (
           <Button

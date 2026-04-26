@@ -17,15 +17,10 @@ import {
   CartesianGrid,
   LineChart,
   Line,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
 } from "recharts";
 import { dateKey, startDate, endDate } from "@/lib/dates";
 import { loadJSON } from "@/lib/storage";
 import { computeDayStats, DayState, emptyDayState } from "@/lib/dayProgress";
-import { COMMON_CATEGORIES } from "@/data/template";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface DayRow {
@@ -56,18 +51,6 @@ function buildAllDays(): DayRow[] {
   }
   return out;
 }
-
-const COLORS = [
-  "hsl(215 70% 55%)",
-  "hsl(160 55% 50%)",
-  "hsl(35 92% 60%)",
-  "hsl(280 60% 60%)",
-  "hsl(190 70% 55%)",
-  "hsl(340 70% 60%)",
-  "hsl(120 50% 50%)",
-  "hsl(45 90% 55%)",
-  "hsl(255 60% 65%)",
-];
 
 export default function AnalysisPage() {
   const { t, format } = useLanguage();
@@ -149,25 +132,7 @@ export default function AnalysisPage() {
     };
   }, [allDays]);
 
-  // Monthly category breakdown
-  const monthCategoryData = useMemo(() => {
-    const acc = new Map<string, { title: string; done: number; total: number }>();
-    monthDays.forEach((r) => {
-      r.perCategory.forEach((c) => {
-        const cur = acc.get(c.id) ?? { title: c.title, done: 0, total: 0 };
-        cur.done += c.done;
-        cur.total += c.total;
-        acc.set(c.id, cur);
-      });
-    });
-    return Array.from(acc.entries()).map(([id, v]) => ({
-      id,
-      name: v.title.replace(/[\u{1F300}-\u{1FAFF}]/gu, "").trim().slice(0, 18),
-      done: v.done,
-      total: v.total,
-      percent: v.total ? Math.round((v.done / v.total) * 100) : 0,
-    }));
-  }, [monthDays]);
+
 
   const monthDailyData = monthDays.map((r) => ({
     day: format(r.date, "d"),
@@ -289,58 +254,6 @@ export default function AnalysisPage() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-5">
-          <div>
-            <h3 className="text-sm font-medium mb-2 text-muted-foreground">{t("analysis.byCategory")}</h3>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthCategoryData} layout="vertical" margin={{ left: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
-                  <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} unit="%" domain={[0, 100]} />
-                  <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} width={110} />
-                  <Tooltip
-                    contentStyle={{
-                      background: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: 12,
-                    }}
-                    formatter={(v: number) => [`${v}%`, t("analysis.completion")]}
-                  />
-                  <Bar dataKey="percent" fill="hsl(var(--accent))" radius={[0, 8, 8, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-          <div>
-            <h3 className="text-sm font-medium mb-2 text-muted-foreground">{t("analysis.taskShare")}</h3>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={monthCategoryData.filter((c) => c.done > 0)}
-                    dataKey="done"
-                    nameKey="name"
-                    innerRadius={50}
-                    outerRadius={85}
-                    paddingAngle={2}
-                  >
-                    {monthCategoryData.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Tooltip
-                    contentStyle={{
-                      background: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: 12,
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
       </section>
     </div>
   );
