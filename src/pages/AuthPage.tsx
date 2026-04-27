@@ -103,7 +103,9 @@ export default function AuthPage() {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.auth.signUp({
+    console.log("[signup] Using Supabase URL:", import.meta.env.VITE_SUPABASE_URL);
+    console.log("[signup] Attempting signUp for:", parsed.data);
+    const { data, error } = await supabase.auth.signUp({
       email: parsed.data,
       password: signupPassword,
       options: {
@@ -113,13 +115,15 @@ export default function AuthPage() {
     });
     setSubmitting(false);
     if (error) {
+      console.error("[signup] Supabase signUp error:", error);
       const msg = error.message.toLowerCase().includes("already")
         ? "An account with this email already exists"
         : error.message;
       toast.error(msg);
       return;
     }
-    toast.success("Account created! You're signed in.");
+    console.log("[signup] Success. user:", data.user?.id, "session:", !!data.session);
+    toast.success("Account created! Check your email to confirm.");
   };
 
   const handleGoogle = async () => {
