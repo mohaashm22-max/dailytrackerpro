@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          messages: Json
+          title: string | null
+          tokens_used: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          messages?: Json
+          title?: string | null
+          tokens_used?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          messages?: Json
+          title?: string | null
+          tokens_used?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string | null
@@ -41,6 +71,90 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          ai_credits: number
+          ai_usage: number
+          billing_cycle: Database["public"]["Enums"]["billing_cycle"]
+          created_at: string
+          current_period_end: string | null
+          id: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_plan: Database["public"]["Enums"]["subscription_plan"]
+          subscription_status: Database["public"]["Enums"]["subscription_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_credits?: number
+          ai_usage?: number
+          billing_cycle?: Database["public"]["Enums"]["billing_cycle"]
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_plan?: Database["public"]["Enums"]["subscription_plan"]
+          subscription_status?: Database["public"]["Enums"]["subscription_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_credits?: number
+          ai_usage?: number
+          billing_cycle?: Database["public"]["Enums"]["billing_cycle"]
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_plan?: Database["public"]["Enums"]["subscription_plan"]
+          subscription_status?: Database["public"]["Enums"]["subscription_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_files: {
+        Row: {
+          created_at: string
+          day_key: string | null
+          file_name: string
+          file_size: number
+          file_type: string
+          id: string
+          note_id: string | null
+          storage_path: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_key?: string | null
+          file_name: string
+          file_size: number
+          file_type: string
+          id?: string
+          note_id?: string | null
+          storage_path: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day_key?: string | null
+          file_name?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          note_id?: string | null
+          storage_path?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -49,7 +163,15 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      billing_cycle: "none" | "monthly" | "yearly"
+      subscription_plan: "free" | "premium_monthly" | "premium_yearly"
+      subscription_status:
+        | "active"
+        | "trialing"
+        | "past_due"
+        | "canceled"
+        | "incomplete"
+        | "inactive"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -176,6 +298,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      billing_cycle: ["none", "monthly", "yearly"],
+      subscription_plan: ["free", "premium_monthly", "premium_yearly"],
+      subscription_status: [
+        "active",
+        "trialing",
+        "past_due",
+        "canceled",
+        "incomplete",
+        "inactive",
+      ],
+    },
   },
 } as const
