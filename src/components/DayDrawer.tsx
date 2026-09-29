@@ -31,6 +31,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { dateKey, workoutForDate, statusFromPercent } from "@/lib/dates";
+import FileAttachments from "@/components/FileAttachments";
 import { useLocalState } from "@/lib/storage";
 import {
   computeDayStats,
@@ -362,6 +363,11 @@ function DayEditor({ date }: { date: Date }) {
 
         {/* Linked notes from Notes page */}
         <LinkedNotesList dateKey={dateKey(date)} />
+
+        {/* Attachments for this day */}
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-soft">
+          <FileAttachments dayKey={dateKey(date)} />
+        </div>
 
         {/* Day note */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-soft" dir="ltr">
