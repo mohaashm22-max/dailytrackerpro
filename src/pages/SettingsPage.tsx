@@ -20,6 +20,9 @@ import { PASSWORD_CHECKS, isPasswordStrong } from "@/lib/passwordPolicy";
 import { CountrySelect } from "@/components/CountrySelect";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
+import PremiumBadge from "@/components/PremiumBadge";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -27,6 +30,7 @@ export default function SettingsPage() {
   const { profile, update, refresh } = useProfile();
   const { theme, toggle: toggleTheme } = useTheme();
   const { lang, t } = useLanguage();
+  const { isPremium } = useSubscription();
 
   const [name, setName] = useState("");
   const [country, setCountry] = useState<string | null>(null);
@@ -166,7 +170,10 @@ export default function SettingsPage() {
               />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-medium truncate">{profile?.display_name || user?.email}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium truncate">{profile?.display_name || user?.email}</p>
+                {isPremium && <PremiumBadge />}
+              </div>
               <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
             </div>
           </div>
@@ -221,6 +228,24 @@ export default function SettingsPage() {
             </div>
             <LanguageSelector align="end" />
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Plan */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("settings.plan")}</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium">
+              {isPremium ? t("settings.planPremium") : t("settings.planFree")}
+            </p>
+            {isPremium && <PremiumBadge />}
+          </div>
+          <Button asChild variant={isPremium ? "outline" : "default"}>
+            <Link to="/upgrade">{isPremium ? t("settings.managePlan") : t("nav.upgrade")}</Link>
+          </Button>
         </CardContent>
       </Card>
 

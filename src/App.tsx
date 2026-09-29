@@ -16,6 +16,8 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ProfileProvider } from "./contexts/ProfileContext";
+import { SubscriptionProvider } from "./contexts/SubscriptionContext";
+import UpgradePage from "./pages/UpgradePage";
 
 const queryClient = new QueryClient();
 
@@ -29,24 +31,27 @@ const App = () => (
           <LanguageProvider>
             <AuthProvider>
               <ProfileProvider>
-                <Routes>
-                  <Route path="/auth" element={<AuthPage />} />
-                  <Route path="/reset-password" element={<ResetPasswordPage />} />
-                  <Route
-                    element={
-                      <ProtectedRoute>
-                        <AppShell />
-                      </ProtectedRoute>
-                    }
-                  >
-                    <Route path="/" element={<Index />} />
-                    <Route path="/analysis" element={<AnalysisPage />} />
-                    <Route path="/notes" element={<NotesPage />} />
-                    <Route path="/settings" element={<SettingsPage />} />
-                  </Route>
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
+                <SubscriptionProvider>
+                  <Routes>
+                    <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
+                    <Route
+                      element={
+                        <ProtectedRoute>
+                          <AppShell />
+                        </ProtectedRoute>
+                      }
+                    >
+                      <Route path="/" element={<Index />} />
+                      <Route path="/analysis" element={<AnalysisPage />} />
+                      <Route path="/notes" element={<NotesPage />} />
+                      <Route path="/settings" element={<SettingsPage />} />
+                      <Route path="/upgrade" element={<UpgradePage />} />
+                    </Route>
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </SubscriptionProvider>
               </ProfileProvider>
             </AuthProvider>
           </LanguageProvider>

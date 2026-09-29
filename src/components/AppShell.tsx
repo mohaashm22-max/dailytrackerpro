@@ -1,11 +1,13 @@
-import { CalendarDays, BarChart3, NotebookPen, LogOut, Settings as SettingsIcon } from "lucide-react";
-import { NavLink, Outlet } from "react-router-dom";
+import { CalendarDays, BarChart3, NotebookPen, LogOut, Settings as SettingsIcon, Star, CheckCircle2 } from "lucide-react";
+import { Link, NavLink, Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useProfile } from "@/contexts/ProfileContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import PremiumBadge from "@/components/PremiumBadge";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { toast } from "sonner";
 
@@ -13,6 +15,7 @@ export default function AppShell() {
   const { user, signOut } = useAuth();
   const { t } = useLanguage();
   const { profile } = useProfile();
+  const { isPremium } = useSubscription();
 
   const NAV = [
     { to: "/", labelKey: "nav.calendar", icon: CalendarDays, end: true },
@@ -63,6 +66,19 @@ export default function AppShell() {
           ))}
         </nav>
         <div className="mt-auto space-y-3">
+          {isPremium ? (
+            <div className="flex items-center justify-center gap-2 rounded-lg border border-primary/30 bg-primary-soft px-3 py-2.5 text-sm font-semibold text-primary">
+              <CheckCircle2 className="h-4 w-4" />
+              {t("nav.premiumActive")}
+            </div>
+          ) : (
+            <Button asChild className="w-full gap-2">
+              <Link to="/upgrade">
+                <Star className="h-4 w-4" fill="currentColor" />
+                {t("nav.upgrade")}
+              </Link>
+            </Button>
+          )}
           <div className="flex items-center gap-2 rounded-xl bg-muted/60 p-3">
             <Avatar className="h-8 w-8">
               <AvatarImage src={profile?.avatar_url ?? undefined} alt={displayName} />
@@ -71,9 +87,12 @@ export default function AppShell() {
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-medium text-foreground">
-                {profile?.display_name || user?.user_metadata?.display_name || user?.email}
-              </p>
+              <div className="flex items-center gap-1.5">
+                <p className="truncate text-xs font-medium text-foreground">
+                  {profile?.display_name || user?.user_metadata?.display_name || user?.email}
+                </p>
+                {isPremium && <PremiumBadge size="xs" />}
+              </div>
               <p className="truncate text-[10px] text-muted-foreground">{user?.email}</p>
             </div>
           </div>
@@ -92,6 +111,16 @@ export default function AppShell() {
       {/* Main */}
       <main className="flex-1 min-w-0 pb-20 md:pb-0">
         <header className="sticky top-0 z-30 flex items-center justify-end gap-2 border-b border-border/60 bg-background/80 px-4 py-2 backdrop-blur md:px-6">
+          {isPremium ? (
+            <PremiumBadge className="md:hidden" />
+          ) : (
+            <Button asChild size="sm" className="gap-1.5 md:hidden">
+              <Link to="/upgrade">
+                <Star className="h-3.5 w-3.5" fill="currentColor" />
+                {t("upgrade.cta")}
+              </Link>
+            </Button>
+          )}
           <LanguageSelector compact />
         </header>
         <Outlet />

@@ -10,6 +10,7 @@ import { useLocalState } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import { dateKey, startDate, isInTracker } from "@/lib/dates";
 import RichTextEditor from "@/components/RichTextEditor";
+import FileAttachments from "@/components/FileAttachments";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Note {
@@ -218,6 +219,10 @@ export default function NotesPage() {
                 onChange={(html) => update({ body: html })}
                 className="flex-1"
               />
+
+              <div className="mt-4 border-t border-border pt-4">
+                <FileAttachments noteId={active.id} />
+              </div>
             </div>
           ) : (
             <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
