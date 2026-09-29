@@ -231,6 +231,24 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Plan */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("settings.plan")}</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium">
+              {isPremium ? t("settings.planPremium") : t("settings.planFree")}
+            </p>
+            {isPremium && <PremiumBadge />}
+          </div>
+          <Button asChild variant={isPremium ? "outline" : "default"}>
+            <Link to="/upgrade">{isPremium ? t("settings.managePlan") : t("nav.upgrade")}</Link>
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Account */}
       <Card>
         <CardHeader>
