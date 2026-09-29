@@ -166,7 +166,10 @@ export default function SettingsPage() {
               />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-medium truncate">{profile?.display_name || user?.email}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium truncate">{profile?.display_name || user?.email}</p>
+                {isPremium && <PremiumBadge />}
+              </div>
               <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
             </div>
           </div>

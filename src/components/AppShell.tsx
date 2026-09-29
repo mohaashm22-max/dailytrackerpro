@@ -111,6 +111,16 @@ export default function AppShell() {
       {/* Main */}
       <main className="flex-1 min-w-0 pb-20 md:pb-0">
         <header className="sticky top-0 z-30 flex items-center justify-end gap-2 border-b border-border/60 bg-background/80 px-4 py-2 backdrop-blur md:px-6">
+          {isPremium ? (
+            <PremiumBadge className="md:hidden" />
+          ) : (
+            <Button asChild size="sm" className="gap-1.5 md:hidden">
+              <Link to="/upgrade">
+                <Star className="h-3.5 w-3.5" fill="currentColor" />
+                {t("upgrade.cta")}
+              </Link>
+            </Button>
+          )}
           <LanguageSelector compact />
         </header>
         <Outlet />
