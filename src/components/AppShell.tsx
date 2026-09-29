@@ -1,11 +1,13 @@
-import { CalendarDays, BarChart3, NotebookPen, LogOut, Settings as SettingsIcon } from "lucide-react";
-import { NavLink, Outlet } from "react-router-dom";
+import { CalendarDays, BarChart3, NotebookPen, LogOut, Settings as SettingsIcon, Star, CheckCircle2 } from "lucide-react";
+import { Link, NavLink, Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useProfile } from "@/contexts/ProfileContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import PremiumBadge from "@/components/PremiumBadge";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { toast } from "sonner";
 
@@ -13,6 +15,7 @@ export default function AppShell() {
   const { user, signOut } = useAuth();
   const { t } = useLanguage();
   const { profile } = useProfile();
+  const { isPremium } = useSubscription();
 
   const NAV = [
     { to: "/", labelKey: "nav.calendar", icon: CalendarDays, end: true },
