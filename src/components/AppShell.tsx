@@ -66,6 +66,19 @@ export default function AppShell() {
           ))}
         </nav>
         <div className="mt-auto space-y-3">
+          {isPremium ? (
+            <div className="flex items-center justify-center gap-2 rounded-lg border border-primary/30 bg-primary-soft px-3 py-2.5 text-sm font-semibold text-primary">
+              <CheckCircle2 className="h-4 w-4" />
+              {t("nav.premiumActive")}
+            </div>
+          ) : (
+            <Button asChild className="w-full gap-2">
+              <Link to="/upgrade">
+                <Star className="h-4 w-4" fill="currentColor" />
+                {t("nav.upgrade")}
+              </Link>
+            </Button>
+          )}
           <div className="flex items-center gap-2 rounded-xl bg-muted/60 p-3">
             <Avatar className="h-8 w-8">
               <AvatarImage src={profile?.avatar_url ?? undefined} alt={displayName} />
@@ -74,9 +87,12 @@ export default function AppShell() {
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-medium text-foreground">
-                {profile?.display_name || user?.user_metadata?.display_name || user?.email}
-              </p>
+              <div className="flex items-center gap-1.5">
+                <p className="truncate text-xs font-medium text-foreground">
+                  {profile?.display_name || user?.user_metadata?.display_name || user?.email}
+                </p>
+                {isPremium && <PremiumBadge size="xs" />}
+              </div>
               <p className="truncate text-[10px] text-muted-foreground">{user?.email}</p>
             </div>
           </div>
