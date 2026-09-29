@@ -20,6 +20,9 @@ import { PASSWORD_CHECKS, isPasswordStrong } from "@/lib/passwordPolicy";
 import { CountrySelect } from "@/components/CountrySelect";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
+import PremiumBadge from "@/components/PremiumBadge";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -27,6 +30,7 @@ export default function SettingsPage() {
   const { profile, update, refresh } = useProfile();
   const { theme, toggle: toggleTheme } = useTheme();
   const { lang, t } = useLanguage();
+  const { isPremium } = useSubscription();
 
   const [name, setName] = useState("");
   const [country, setCountry] = useState<string | null>(null);
