@@ -140,7 +140,12 @@ function DayEditor({ date }: { date: Date }) {
 
   // Persist hydration once on first open so storage shape is always normalized.
   useEffect(() => {
-    if (!raw.blocks || raw.workoutGroups || raw.categories || raw.dayName === undefined) {
+    const needsStableIds = raw.blocks?.some((block) =>
+      block.sections.some((section) =>
+        !section.id || !section.taskIds || section.taskIds.length !== section.tasks.length,
+      ),
+    );
+    if (!raw.blocks || raw.workoutGroups || raw.categories || raw.dayName === undefined || needsStableIds) {
       setState(state);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -170,7 +175,7 @@ function DayEditor({ date }: { date: Date }) {
       {
         id: `block-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
         title: t("day.newBlock"),
-        sections: [{ title: t("day.newSection"), tasks: [] }],
+        sections: [{ id: `section-${crypto.randomUUID()}`, title: t("day.newSection"), tasks: [], taskIds: [] }],
       },
     ]);
 
@@ -575,7 +580,7 @@ function BlockCard({
           )}
           {block.sections.map((section, si) => (
             <SectionCard
-              key={si}
+               key={section.id ?? si}
               blockId={block.id}
               dayKey={dayKey}
               sectionIdx={si}
