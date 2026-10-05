@@ -12,8 +12,10 @@ import { COMMON_CATEGORIES, WORKOUT_GROUPS, Category, TaskGroup } from "@/data/t
  */
 
 export interface EditableSection {
+  id?: string;
   title: string;
   tasks: string[];
+  taskIds?: string[];
 }
 export interface EditableBlock {
   id: string;
@@ -53,7 +55,16 @@ export function taskKey(blockId: string, sectionIdx: number, taskIdx: number) {
 
 /** Clone helpers so per-day edits never mutate the shared template. */
 function cloneSections(groups: TaskGroup[] | EditableSection[]): EditableSection[] {
-  return groups.map((g) => ({ title: g.title, tasks: [...g.tasks] }));
+  return groups.map((g, sectionIdx) => ({
+    id: "id" in g && typeof g.id === "string" ? g.id : `section-${sectionIdx}-${crypto.randomUUID()}`,
+    title: g.title,
+    tasks: [...g.tasks],
+    taskIds: g.tasks.map((_, taskIdx) =>
+      "taskIds" in g && g.taskIds?.[taskIdx]
+        ? g.taskIds[taskIdx]
+        : `task-${taskIdx}-${crypto.randomUUID()}`,
+    ),
+  }));
 }
 function cloneBlocksFromCategories(cats: Category[] | EditableCategory[]): EditableBlock[] {
   return cats.map((c, i) => ({

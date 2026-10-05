@@ -118,6 +118,7 @@ export type Database = {
       }
       user_files: {
         Row: {
+          block_id: string | null
           created_at: string
           day_key: string | null
           file_name: string
@@ -125,11 +126,14 @@ export type Database = {
           file_type: string
           id: string
           note_id: string | null
+          section_id: string | null
           storage_path: string
+          task_id: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          block_id?: string | null
           created_at?: string
           day_key?: string | null
           file_name: string
@@ -137,11 +141,14 @@ export type Database = {
           file_type: string
           id?: string
           note_id?: string | null
+          section_id?: string | null
           storage_path: string
+          task_id?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          block_id?: string | null
           created_at?: string
           day_key?: string | null
           file_name?: string
@@ -149,7 +156,9 @@ export type Database = {
           file_type?: string
           id?: string
           note_id?: string | null
+          section_id?: string | null
           storage_path?: string
+          task_id?: string | null
           updated_at?: string
           user_id?: string
         }

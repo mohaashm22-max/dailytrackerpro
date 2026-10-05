@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Download, FileText, Loader2, Paperclip, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -20,9 +21,17 @@ interface StoredFile {
 export default function FileAttachments({
   noteId,
   dayKey,
+  blockId,
+  sectionId,
+  taskId,
+  compact = false,
 }: {
   noteId?: string | null;
   dayKey?: string | null;
+  blockId?: string | null;
+  sectionId?: string | null;
+  taskId?: string | null;
+  compact?: boolean;
 }) {
   const { user } = useAuth();
   const { isPremium, limits } = useSubscription();
@@ -40,8 +49,16 @@ export default function FileAttachments({
       .select("id, file_name, file_type, file_size, storage_path")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
-    if (noteId) q = q.eq("note_id", noteId);
-    else if (dayKey) q = q.eq("day_key", dayKey);
+    if (noteId) {
+      q = q.eq("note_id", noteId);
+    } else if (dayKey && blockId) {
+      q = q.eq("day_key", dayKey).eq("block_id", blockId);
+      q = sectionId ? q.eq("section_id", sectionId) : q.is("section_id", null);
+      q = taskId ? q.eq("task_id", taskId) : q.is("task_id", null);
+    } else {
+      setFiles([]);
+      return;
+    }
     const [{ data }, { count }] = await Promise.all([
       q,
       supabase
@@ -51,7 +68,7 @@ export default function FileAttachments({
     ]);
     setFiles((data as StoredFile[]) ?? []);
     setTotalCount(count ?? 0);
-  }, [user, noteId, dayKey]);
+  }, [user, noteId, dayKey, blockId, sectionId, taskId]);
 
   useEffect(() => {
     load();
@@ -91,6 +108,9 @@ export default function FileAttachments({
       storage_path: path,
       note_id: noteId ?? null,
       day_key: dayKey ?? null,
+      block_id: blockId ?? null,
+      section_id: sectionId ?? null,
+      task_id: taskId ?? null,
     });
     setBusy(false);
     if (error) {
@@ -126,6 +146,93 @@ export default function FileAttachments({
 
   const atLimit = !isPremium && totalCount >= FREE_LIMITS.maxFiles;
 
+  const fileInput = (
+    <input
+      ref={inputRef}
+      type="file"
+      className="hidden"
+      accept=".pdf,.docx,.doc,.xlsx,.xls,.jpg,.jpeg,.png,.txt"
+      onChange={(e) => {
+        const f = e.target.files?.[0];
+        if (f) handleUpload(f);
+        e.target.value = "";
+      }}
+    />
+  );
+
+  const fileList = files.length > 0 && (
+    <ul className="space-y-1.5">
+      {files.map((f) => (
+        <li
+          key={f.id}
+          className={compact
+            ? "flex items-center gap-1.5 rounded-md border border-border/70 bg-card px-2 py-1"
+            : "flex items-center gap-2 rounded-lg border border-border px-3 py-2"}
+        >
+          <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <div className="min-w-0 flex-1">
+            <p className={compact ? "truncate text-xs" : "truncate text-sm"}>{f.file_name}</p>
+            {!compact && <p className="text-[11px] text-muted-foreground">{formatBytes(f.file_size)}</p>}
+          </div>
+          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleDownload(f)} aria-label={t("files.download")}>
+            <Download className="h-3.5 w-3.5" />
+          </Button>
+          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleDelete(f)} aria-label={t("files.delete")}>
+            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+          </Button>
+        </li>
+      ))}
+    </ul>
+  );
+
+  if (compact) {
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="relative h-7 w-7 shrink-0 text-muted-foreground"
+            aria-label={t("files.attach")}
+            title={t("files.attach")}
+          >
+            <Paperclip className="h-4 w-4" />
+            {files.length > 0 && (
+              <span className="absolute end-0 top-0 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-primary px-0.5 text-[9px] text-primary-foreground">
+                {files.length}
+              </span>
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-72 space-y-3 p-3" align="end">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm font-medium">{t("files.title")}</p>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-8 gap-1.5"
+              disabled={busy}
+              onClick={() => inputRef.current?.click()}
+            >
+              {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Paperclip className="h-3.5 w-3.5" />}
+              {t("files.attach")}
+            </Button>
+          </div>
+          {fileInput}
+          {fileList || <p className="text-xs text-muted-foreground">{t("files.empty")}</p>}
+          {atLimit && (
+            <div className="flex items-center justify-between gap-2 border-t border-border pt-2 text-xs">
+              <span>{t("files.limitReached")}</span>
+              <Button asChild size="sm"><Link to="/upgrade">{t("upgrade.cta")}</Link></Button>
+            </div>
+          )}
+        </PopoverContent>
+      </Popover>
+    );
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -145,22 +252,14 @@ export default function FileAttachments({
             variant="outline"
             disabled={busy}
             onClick={() => inputRef.current?.click()}
+            aria-label={t("files.attach")}
+            title={t("files.attach")}
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
             {t("files.attach")}
           </Button>
         </div>
-        <input
-          ref={inputRef}
-          type="file"
-          className="hidden"
-          accept=".pdf,.docx,.doc,.xlsx,.xls,.jpg,.jpeg,.png,.txt"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) handleUpload(f);
-            e.target.value = "";
-          }}
-        />
+        {fileInput}
       </div>
 
       {atLimit && (
@@ -172,30 +271,7 @@ export default function FileAttachments({
         </div>
       )}
 
-      {files.length === 0 ? (
-        <p className="text-xs text-muted-foreground">{t("files.empty")}</p>
-      ) : (
-        <ul className="space-y-1.5">
-          {files.map((f) => (
-            <li
-              key={f.id}
-              className="flex items-center gap-2 rounded-lg border border-border px-3 py-2"
-            >
-              <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm">{f.file_name}</p>
-                <p className="text-[11px] text-muted-foreground">{formatBytes(f.file_size)}</p>
-              </div>
-              <Button size="icon" variant="ghost" onClick={() => handleDownload(f)}>
-                <Download className="h-4 w-4" />
-              </Button>
-              <Button size="icon" variant="ghost" onClick={() => handleDelete(f)}>
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
-            </li>
-          ))}
-        </ul>
-      )}
+      {fileList || <p className="text-xs text-muted-foreground">{t("files.empty")}</p>}
     </div>
   );
 }
