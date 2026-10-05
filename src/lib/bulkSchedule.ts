@@ -64,7 +64,12 @@ function cloneBlocks(blocks: EditableBlock[]): EditableBlock[] {
   return blocks.map((b) => ({
     id: b.id,
     title: b.title,
-    sections: b.sections.map((s) => ({ title: s.title, tasks: [...s.tasks] })),
+    sections: b.sections.map((s) => ({
+      id: s.id,
+      title: s.title,
+      tasks: [...s.tasks],
+      taskIds: [...(s.taskIds ?? [])],
+    })),
   }));
 }
 
@@ -90,7 +95,7 @@ function findOrCreateSection(block: EditableBlock, title: string): EditableSecti
     (s) => s.title.trim().toLowerCase() === trimmed.toLowerCase(),
   );
   if (!sec) {
-    sec = { title: trimmed, tasks: [] };
+    sec = { id: `section-${crypto.randomUUID()}`, title: trimmed, tasks: [], taskIds: [] };
     block.sections.push(sec);
   }
   return sec;
@@ -107,12 +112,16 @@ export function addTaskToDay(date: Date, input: ScheduleTaskInput) {
   const target = input.target ?? { kind: "block", title: "Tasks" };
   if (target.kind === "block") {
     const block = findOrCreateBlock(blocks, target.title);
-    if (block.sections.length === 0) block.sections.push({ title: "", tasks: [] });
+    if (block.sections.length === 0) {
+      block.sections.push({ id: `section-${crypto.randomUUID()}`, title: "", tasks: [], taskIds: [] });
+    }
     block.sections[0].tasks.push(input.text);
+    block.sections[0].taskIds = [...(block.sections[0].taskIds ?? []), `task-${crypto.randomUUID()}`];
   } else {
     const block = findOrCreateBlock(blocks, target.blockTitle);
     const section = findOrCreateSection(block, target.title);
     section.tasks.push(input.text);
+    section.taskIds = [...(section.taskIds ?? []), `task-${crypto.randomUUID()}`];
   }
 
   saveJSON(k, { ...state, blocks });
@@ -126,7 +135,10 @@ export function addSectionToDay(date: Date, input: ScheduleSectionInput) {
 
   const block = findOrCreateBlock(blocks, input.blockTitle);
   const section = findOrCreateSection(block, input.title);
-  for (const t of input.initialTasks ?? []) section.tasks.push(t);
+  for (const t of input.initialTasks ?? []) {
+    section.tasks.push(t);
+    section.taskIds = [...(section.taskIds ?? []), `task-${crypto.randomUUID()}`];
+  }
 
   saveJSON(k, { ...state, blocks });
 }
@@ -140,7 +152,10 @@ export function addBlockToDay(date: Date, input: ScheduleBlockInput) {
   const block = findOrCreateBlock(blocks, input.title);
   for (const s of input.sections ?? []) {
     const sec = findOrCreateSection(block, s.title);
-    for (const t of s.tasks) sec.tasks.push(t);
+    for (const t of s.tasks) {
+      sec.tasks.push(t);
+      sec.taskIds = [...(sec.taskIds ?? []), `task-${crypto.randomUUID()}`];
+    }
   }
 
   saveJSON(k, { ...state, blocks });

@@ -194,7 +194,13 @@ function DayEditor({ date }: { date: Date }) {
     updateBlocks((bs) =>
       bs.map((b) =>
         b.id === blockId
-          ? { ...b, sections: [...b.sections, { title: t("day.newSection"), tasks: [] }] }
+          ? {
+              ...b,
+              sections: [
+                ...b.sections,
+                { id: `section-${crypto.randomUUID()}`, title: t("day.newSection"), tasks: [], taskIds: [] },
+              ],
+            }
           : b,
       ),
     );
@@ -237,7 +243,13 @@ function DayEditor({ date }: { date: Date }) {
           ? {
               ...b,
               sections: b.sections.map((s, i) =>
-                i === sectionIdx ? { ...s, tasks: [...s.tasks, t("day.newTask")] } : s,
+                i === sectionIdx
+                  ? {
+                      ...s,
+                      tasks: [...s.tasks, t("day.newTask")],
+                      taskIds: [...(s.taskIds ?? []), `task-${crypto.randomUUID()}`],
+                    }
+                  : s,
               ),
             }
           : b,
@@ -280,7 +292,11 @@ function DayEditor({ date }: { date: Date }) {
                 ...b,
                 sections: b.sections.map((s, i) =>
                   i === sectionIdx
-                    ? { ...s, tasks: s.tasks.filter((_, ti) => ti !== taskIdx) }
+                    ? {
+                        ...s,
+                        tasks: s.tasks.filter((_, ti) => ti !== taskIdx),
+                        taskIds: (s.taskIds ?? []).filter((_, ti) => ti !== taskIdx),
+                      }
                     : s,
                 ),
               }
@@ -344,6 +360,7 @@ function DayEditor({ date }: { date: Date }) {
             key={block.id}
             block={block}
             state={state}
+            dayKey={dateKey(date)}
             onTitleChange={(t) => updateBlockTitle(block.id, t)}
             onDelete={() => deleteBlock(block.id)}
             onAddSection={() => addSection(block.id)}
@@ -363,11 +380,6 @@ function DayEditor({ date }: { date: Date }) {
 
         {/* Linked notes from Notes page */}
         <LinkedNotesList dateKey={dateKey(date)} />
-
-        {/* Attachments for this day */}
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-soft">
-          <FileAttachments dayKey={dateKey(date)} />
-        </div>
 
         {/* Day note */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-soft" dir="ltr">
@@ -420,6 +432,7 @@ function LinkedNotesList({ dateKey }: { dateKey: string }) {
 interface BlockCardProps {
   block: EditableBlock;
   state: DayState;
+  dayKey: string;
   onTitleChange: (title: string) => void;
   onDelete: () => void;
   onAddSection: () => void;
@@ -435,6 +448,7 @@ interface BlockCardProps {
 function BlockCard({
   block,
   state,
+  dayKey,
   onTitleChange,
   onDelete,
   onAddSection,
@@ -532,6 +546,7 @@ function BlockCard({
               <Pencil className="h-3.5 w-3.5" />
             </Button>
           )}
+          <FileAttachments dayKey={dayKey} blockId={block.id} compact />
           <Button
             size="icon"
             variant="ghost"
@@ -562,6 +577,7 @@ function BlockCard({
             <SectionCard
               key={si}
               blockId={block.id}
+              dayKey={dayKey}
               sectionIdx={si}
               section={section}
               state={state}
@@ -592,6 +608,7 @@ function BlockCard({
 
 interface SectionCardProps {
   blockId: string;
+  dayKey: string;
   sectionIdx: number;
   section: EditableSection;
   state: DayState;
@@ -606,6 +623,7 @@ interface SectionCardProps {
 
 function SectionCard({
   blockId,
+  dayKey,
   sectionIdx,
   section,
   state,
@@ -652,6 +670,12 @@ function SectionCard({
         <span className="text-[10px] font-semibold text-muted-foreground tabular-nums shrink-0">
           {done}/{total} · {Math.round(pct * 100)}%
         </span>
+        <FileAttachments
+          dayKey={dayKey}
+          blockId={blockId}
+          sectionId={section.id}
+          compact
+        />
         <Button
           size="icon"
           variant="ghost"
@@ -670,6 +694,9 @@ function SectionCard({
               <TaskRow
                 key={ti}
                 blockId={blockId}
+                dayKey={dayKey}
+                sectionId={section.id ?? `section-${sectionIdx}`}
+                taskId={section.taskIds?.[ti] ?? `task-${ti}`}
                 sectionIdx={sectionIdx}
                 taskIdx={ti}
                 task={task}
@@ -699,6 +726,9 @@ function SectionCard({
 
 function TaskRow({
   blockId,
+  dayKey,
+  sectionId,
+  taskId,
   sectionIdx,
   taskIdx,
   task,
@@ -709,6 +739,9 @@ function TaskRow({
   onDeleteTask,
 }: {
   blockId: string;
+  dayKey: string;
+  sectionId: string;
+  taskId: string;
   sectionIdx: number;
   taskIdx: number;
   task: string;
@@ -772,6 +805,13 @@ function TaskRow({
             {task || <span className="text-muted-foreground italic">{t("day.emptyTask")}</span>}
           </button>
         )}
+        <FileAttachments
+          dayKey={dayKey}
+          blockId={blockId}
+          sectionId={sectionId}
+          taskId={taskId}
+          compact
+        />
         <Button
           size="icon"
           variant="ghost"

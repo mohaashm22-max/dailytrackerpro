@@ -20,9 +20,17 @@ interface StoredFile {
 export default function FileAttachments({
   noteId,
   dayKey,
+  blockId,
+  sectionId,
+  taskId,
+  compact = false,
 }: {
   noteId?: string | null;
   dayKey?: string | null;
+  blockId?: string | null;
+  sectionId?: string | null;
+  taskId?: string | null;
+  compact?: boolean;
 }) {
   const { user } = useAuth();
   const { isPremium, limits } = useSubscription();
@@ -40,8 +48,16 @@ export default function FileAttachments({
       .select("id, file_name, file_type, file_size, storage_path")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
-    if (noteId) q = q.eq("note_id", noteId);
-    else if (dayKey) q = q.eq("day_key", dayKey);
+    if (noteId) {
+      q = q.eq("note_id", noteId);
+    } else if (dayKey && blockId) {
+      q = q.eq("day_key", dayKey).eq("block_id", blockId);
+      q = sectionId ? q.eq("section_id", sectionId) : q.is("section_id", null);
+      q = taskId ? q.eq("task_id", taskId) : q.is("task_id", null);
+    } else {
+      setFiles([]);
+      return;
+    }
     const [{ data }, { count }] = await Promise.all([
       q,
       supabase
@@ -51,7 +67,7 @@ export default function FileAttachments({
     ]);
     setFiles((data as StoredFile[]) ?? []);
     setTotalCount(count ?? 0);
-  }, [user, noteId, dayKey]);
+  }, [user, noteId, dayKey, blockId, sectionId, taskId]);
 
   useEffect(() => {
     load();
@@ -91,6 +107,9 @@ export default function FileAttachments({
       storage_path: path,
       note_id: noteId ?? null,
       day_key: dayKey ?? null,
+      block_id: blockId ?? null,
+      section_id: sectionId ?? null,
+      task_id: taskId ?? null,
     });
     setBusy(false);
     if (error) {
@@ -127,27 +146,32 @@ export default function FileAttachments({
   const atLimit = !isPremium && totalCount >= FREE_LIMITS.maxFiles;
 
   return (
-    <div className="space-y-3">
+    <div className={compact ? "space-y-1.5" : "space-y-3"}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <Paperclip className="h-4 w-4" />
-          {t("files.title")}
-        </div>
+        {!compact && (
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <Paperclip className="h-4 w-4" />
+            {t("files.title")}
+          </div>
+        )}
         <div className="flex items-center gap-2">
-          {!isPremium && (
+          {!compact && !isPremium && (
             <span className="text-xs text-muted-foreground">
               {t("files.usage", { used: String(totalCount), max: String(FREE_LIMITS.maxFiles) })}
             </span>
           )}
           <Button
             type="button"
-            size="sm"
-            variant="outline"
+            size={compact ? "icon" : "sm"}
+            variant={compact ? "ghost" : "outline"}
+            className={compact ? "h-7 w-7 text-muted-foreground" : undefined}
             disabled={busy}
             onClick={() => inputRef.current?.click()}
+            aria-label={t("files.attach")}
+            title={t("files.attach")}
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
-            {t("files.attach")}
+            {!compact && t("files.attach")}
           </Button>
         </div>
         <input
@@ -163,7 +187,7 @@ export default function FileAttachments({
         />
       </div>
 
-      {atLimit && (
+      {atLimit && !compact && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-muted/50 p-3 text-xs">
           <span>{t("files.limitReached")}</span>
           <Button asChild size="sm">
@@ -173,24 +197,27 @@ export default function FileAttachments({
       )}
 
       {files.length === 0 ? (
+        compact ? null :
         <p className="text-xs text-muted-foreground">{t("files.empty")}</p>
       ) : (
         <ul className="space-y-1.5">
           {files.map((f) => (
             <li
               key={f.id}
-              className="flex items-center gap-2 rounded-lg border border-border px-3 py-2"
+              className={compact
+                ? "flex items-center gap-1.5 rounded-md border border-border/70 bg-card px-2 py-1"
+                : "flex items-center gap-2 rounded-lg border border-border px-3 py-2"}
             >
               <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm">{f.file_name}</p>
-                <p className="text-[11px] text-muted-foreground">{formatBytes(f.file_size)}</p>
+                <p className={compact ? "truncate text-xs" : "truncate text-sm"}>{f.file_name}</p>
+                {!compact && <p className="text-[11px] text-muted-foreground">{formatBytes(f.file_size)}</p>}
               </div>
-              <Button size="icon" variant="ghost" onClick={() => handleDownload(f)}>
-                <Download className="h-4 w-4" />
+              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleDownload(f)} aria-label={t("files.download") }>
+                <Download className="h-3.5 w-3.5" />
               </Button>
-              <Button size="icon" variant="ghost" onClick={() => handleDelete(f)}>
-                <Trash2 className="h-4 w-4 text-destructive" />
+              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleDelete(f)} aria-label={t("files.delete") }>
+                <Trash2 className="h-3.5 w-3.5 text-destructive" />
               </Button>
             </li>
           ))}
